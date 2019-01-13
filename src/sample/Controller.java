@@ -14,10 +14,16 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 
 import java.io.IOException;
+import java.security.Security;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import javafx.concurrent.Task;
+
+import org.springframework.security.crypto.encrypt.Encryptors;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
+import org.springframework.security.crypto.keygen.KeyGenerators;
+
+import javax.crypto.Cipher;
 
 
 public class Controller implements TCPConnectionListener{
@@ -52,18 +58,17 @@ public class Controller implements TCPConnectionListener{
     @FXML
     private TextField Port;
 
-    private static String ip ="";
-    private static int port = 0;
+    private static String ip ="gavnotest1488.ddns.net";
+    private static int port = 8199;
     private TCPConnection Connection;
     private String Name="";
     public static boolean connect=false;
     Date date;
     DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 
-
-
-
-
+    String password = "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq";
+    String salt = KeyGenerators.string().generateKey();
+    TextEncryptor encryptor = Encryptors.text(password, salt);
 
 
     public void initialize() {
@@ -139,33 +144,65 @@ public class Controller implements TCPConnectionListener{
     //отправка сообщения
     @FXML
     public void sendMessage(javafx.event.ActionEvent actionEvent){
-        String msg=outMessage.getText();
+        String msg=Name+" "+outMessage.getText();
+
+        //spring security
+
+        //шифрование
+        String cipherText = encryptor.encrypt(msg);
+        System.out.println("шифрование "+cipherText);
+        //дешифрование
+        //System.out.println("дешифрование "+decrypt(cipherText));
+
         if(msg.trim().length() > 0){
             System.out.println("Отправка");
             outMessage.clear();
-            Connection.sendString(Name+":"+msg);
-        }
 
+
+            Connection.sendString(cipherText);
+        }
+    }
+
+    private String decrypt(String msg){
+        //System.out.println("-------------------!!!-----------------------");
+        //System.out.println("Расшифровка");
+        //System.out.println(">"+msg);
+        String decryptedText = encryptor.decrypt(msg);
+        //System.out.println("!"+decryptedText);
+        //System.out.println("-------------------!!!----------------------");
+        return decryptedText;
+
+        
 
     }
 
-
     private synchronized void printMesage(String str){
-        date= new Date();
-        Platform.runLater(() -> {
-            Text text3 = new Text(dateFormat.format(date)+":"+str);
-            if(str.contains(Name)){
-                text3.setStyle("-fx-fill: #4F8A10;");
+
+        if(!str.equals(null)&&!str.equals("")) {
+            if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals(null)) {
+                System.out.println("Строка " + str);
+                System.out.println("Нужно расшифровать");
+                str = decrypt(str);
             }
-            allMessage.getChildren().addAll(text3);
-        });
-        ScrollBar.setVvalue(1.0);
 
-        String strChek=str;
-        if(strChek.contains("ты пидор")&&!strChek.contains(Name)){
-            crash();
+
+            date = new Date();
+            String finalStr = str;
+            Platform.runLater(() -> {
+
+                Text text3 = new Text(dateFormat.format(date) + ":" + finalStr + "\n");
+                if (finalStr.contains(Name)) {
+                    text3.setStyle("-fx-fill: #4F8A10;");
+                }
+                allMessage.getChildren().addAll(text3);
+            });
+            ScrollBar.setVvalue(1.0);
+
+            String strChek = str;
+            if (strChek.contains("ты пидор") && !strChek.contains(Name)) {
+                crash();
+            }
         }
-
     }
 
     public void crash(){
@@ -186,7 +223,8 @@ public class Controller implements TCPConnectionListener{
 
     @Override
     public void onRecieveReady(TCPConnection tcpConnection, String str) {
-        printMesage(str+"\n");
+        System.out.println(str);
+        printMesage(str);
     }
 
     @Override
