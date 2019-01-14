@@ -59,7 +59,7 @@ public class Controller implements TCPConnectionListener{
     private TextField Port;
 
     private static String ip ="gavnotest1488.ddns.net";
-    private static int port = 8199;
+    private static int port=8199;
     private TCPConnection Connection;
     private String Name="";
     public static boolean connect=false;
@@ -68,11 +68,11 @@ public class Controller implements TCPConnectionListener{
 
     String password = "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq";
     String salt = KeyGenerators.string().generateKey();
+
     TextEncryptor encryptor = Encryptors.text(password, salt);
 
 
     public void initialize() {
-
         TryConnect.setOnAction(event -> {
             //сделать првоерку того что вводит пользователь
             Status.setFill(Color.BLUE);
@@ -144,46 +144,64 @@ public class Controller implements TCPConnectionListener{
     //отправка сообщения
     @FXML
     public void sendMessage(javafx.event.ActionEvent actionEvent){
+        boolean serviceMsg=false;
         String msg=Name+" "+outMessage.getText();
 
-        //spring security
+        if(msg.contains("/get pass")){
+            serviceMsg=true;
+            printServiceMesage("pass = "+password);
+        }
 
-        //шифрование
-        String cipherText = encryptor.encrypt(msg);
-        System.out.println("шифрование "+cipherText);
-        //дешифрование
-        //System.out.println("дешифрование "+decrypt(cipherText));
+        if(msg.contains("/get salt")){
+            serviceMsg=true;
+            printServiceMesage("salt = "+salt);
+        }
 
-        if(msg.trim().length() > 0){
-            System.out.println("Отправка");
-            outMessage.clear();
+        if(!serviceMsg) {
+            //spring security
+            //шифрование
+            String cipherText = encryptor.encrypt(msg);
+            System.out.println("шифрование " + cipherText);
+            //дешифрование
+            //System.out.println("дешифрование "+decrypt(cipherText));
+
+            if (msg.trim().length() > 0) {
+                System.out.println("Отправка");
+                outMessage.clear();
 
 
-            Connection.sendString(cipherText);
+                Connection.sendString(cipherText);
+            }
         }
     }
 
     private String decrypt(String msg){
-        //System.out.println("-------------------!!!-----------------------");
-        //System.out.println("Расшифровка");
+        //System.out.println("-------------------up-----------------------");
+        System.out.println("Расшифровка");
         //System.out.println(">"+msg);
-        String decryptedText = encryptor.decrypt(msg);
+        String decryptedText;
+        try {
+           decryptedText = encryptor.decrypt(msg);
+            return decryptedText;
+        }catch (IllegalStateException e){
+            decryptedText ="не удалось расшифровать";
+        }
+        //System.out.println(decryptedText);
         //System.out.println("!"+decryptedText);
-        //System.out.println("-------------------!!!----------------------");
-        return decryptedText;
+        //System.out.println("-------------------down---------------------");
+        return  decryptedText;
 
         
 
     }
 
     private synchronized void printMesage(String str){
-
-        if(!str.equals(null)&&!str.equals("")) {
-            if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals(null)) {
-                System.out.println("Строка " + str);
-                System.out.println("Нужно расшифровать");
+            System.out.println(">"+str);
+            if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")) {
+                System.out.println("Нужно расшифровать "+str);
                 str = decrypt(str);
             }
+            System.out.println(str);
 
 
             date = new Date();
@@ -202,7 +220,26 @@ public class Controller implements TCPConnectionListener{
             if (strChek.contains("ты пидор") && !strChek.contains(Name)) {
                 crash();
             }
-        }
+
+    }
+
+    private synchronized void printServiceMesage(String str){
+        System.out.println(">"+str);
+
+        date = new Date();
+        String finalStr = str;
+        Platform.runLater(() -> {
+            Text text3 = new Text(dateFormat.format(date) + ":" + finalStr + "\n");
+            if (finalStr.contains(Name)) {
+                text3.setStyle("-fx-fill: #4F8A10;");
+            }
+            allMessage.getChildren().addAll(text3);
+        });
+        ScrollBar.setVvalue(1.0);
+
+
+
+
     }
 
     public void crash(){
