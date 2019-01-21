@@ -88,11 +88,12 @@ public class Controller implements TCPConnectionListener{
     private String privateKeyStr;
     private String otherKeyStr;
 
-    private String password = "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq";
-    private String salt = KeyGenerators.string().generateKey();
+    private String password;
+    //private String salt = KeyGenerators.string().generateKey();
+    private String salt="324fee14e5b58635";
 
-    TextEncryptor encryptor = Encryptors.text(password, salt);
-
+    //private TextEncryptor encryptor = Encryptors.text(password, salt);
+    private TextEncryptor encryptor;
 
     public void initialize() {
         TryConnect.setOnAction(event -> {
@@ -188,6 +189,7 @@ public class Controller implements TCPConnectionListener{
         if(!serviceMsg) {
             //spring security
             //шифрование
+            encryptor = Encryptors.text(password, salt);
             String cipherText = encryptor.encrypt(msg);
             System.out.println("шифрование " + cipherText);
             //дешифрование
@@ -206,6 +208,7 @@ public class Controller implements TCPConnectionListener{
 
     private String decrypt(String msg){
         //System.out.println("-------------------up-----------------------");
+        encryptor = Encryptors.text(password, salt);
         System.out.println("Расшифровка");
         //System.out.println(">"+msg);
         String decryptedText;
@@ -259,9 +262,17 @@ public class Controller implements TCPConnectionListener{
                         otherKeyStr = finalStr.replace("service:public_key:", "");
                         System.out.println("Получили публичныый ключ от другого клиента");
                         System.out.println(otherKeyStr);
+                        decryptOtherKeyStr(otherKeyStr);
+                        for(int i=0;i<32;i++){
+                            System.out.print(otherKey[i]+" ");
+                        }
+                        System.out.println(otherKey);
+                        getPassword();
                         getOhtherPublicKey = true;
 
+
                     }
+
                     Connection.sendString("service:public_key:" + publicKeyStr);
             }
 
@@ -305,6 +316,8 @@ public class Controller implements TCPConnectionListener{
 
     }
 
+
+    //генерация ключей
     private void genKey(){
         //формируем приватный ключ
         Random random = new Random();
@@ -323,8 +336,40 @@ public class Controller implements TCPConnectionListener{
         }
         publicKeyStr=publicKeyStr.replace("null","");
     }
+    //расшифровка публичного ключа(строки) в массив
+    private void decryptOtherKeyStr(String otherKeyStr){
+        System.out.println("Преобразуем ключ");
+        int p1=0;
+        int index=0;
+
+        for(int i=1;i<otherKeyStr.length()+1;i++){
+
+            if(otherKeyStr.substring(i-1,i).equals(" ")){
+                int x=0;
+                x=Integer.parseInt(otherKeyStr.substring(p1,i-1));
+                otherKey[index] = BigInteger.valueOf(x);
+                index++;
+
+                p1=i;
+            }
+        }
+
+    }
+    //ключ для шифрование сообщение(aes256)
+    private void getPassword(){
+        String keyString="";
+        for(int i=0;i<32;i++){
 
 
+            BigInteger key = otherKey[i].modPow(privateKey[i],modul);
+            int x2 = 50+key.intValue();
+            char ch = (char)x2;
+            keyString+=ch;
+        }
+        password=keyString;
+        System.out.println();
+        System.out.println(keyString);
+    }
     public void crash(){
         System.out.println("Краш");
             Object[] o = null;
