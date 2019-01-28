@@ -79,7 +79,7 @@ public class Controller implements TCPConnectionListener{
     private boolean First=false;//подключился первым
     private boolean Second=false;//подключился вторым
     private boolean getOhtherPublicKey=false;//получили публичный ключ от другого клиента
-
+    public static boolean needGenNewKey=false;
 
     private BigInteger[] publicKey = new BigInteger[32];
     private BigInteger[] privateKey = new BigInteger[32];
@@ -213,7 +213,7 @@ public class Controller implements TCPConnectionListener{
         //System.out.println(">"+msg);
         String decryptedText;
         try {
-           decryptedText = encryptor.decrypt(msg);
+            decryptedText = encryptor.decrypt(msg);
             return decryptedText;
         }catch (IllegalStateException e){
             decryptedText ="не удалось расшифровать";
@@ -223,77 +223,96 @@ public class Controller implements TCPConnectionListener{
         //System.out.println("-------------------down---------------------");
         return  decryptedText;
 
-        
+
 
     }
 
     private synchronized void printMesage(String str){
-            //System.out.println(">"+str);
-            if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")&&!str.contains("service:")) {
-                //System.out.println("Нужно расшифровать "+str);
-                str = decrypt(str);
+        //System.out.println(">"+str);
+        if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")&&!str.contains("service:")) {
+            //System.out.println("Нужно расшифровать "+str);
+            str = decrypt(str);
+        }
+        //System.out.println(str);
+
+        //System.out.println("First? = "+First);
+        date = new Date();
+        String finalStr = str;
+
+        //если не служебное сообщение то печатаем
+        if(needGenNewKey){
+            getOhtherPublicKey=false;
+
+            publicKey = new BigInteger[32];
+            privateKey = new BigInteger[32];
+            otherKey = new BigInteger[32];
+            publicKeyStr="";
+            privateKeyStr="";
+            otherKeyStr="";
+
+            System.out.println("нужно сформировать новые ключи");
+            genKey();
+            if(Second){
+                System.out.println("Посылаю публичный ключ");
+                Connection.sendString("service:public_key:" + publicKeyStr);
             }
-            //System.out.println(str);
+            needGenNewKey=false;
+        }
+        if(!First&&!Second) {
+            System.out.println("!!!!!!");
+            if (finalStr.equals("service:you first")) {
+                First = true;
+                Second = false;
+            }
+            if (finalStr.equals("service:you second")) {
+                First = false;
+                Second = true;
+                System.out.println("Посылаю публичный ключ");
+                Connection.sendString("service:public_key:" + publicKeyStr);
+            }
+        }
 
-            //System.out.println("First? = "+First);
-            date = new Date();
-            String finalStr = str;
+        if(finalStr.contains("service:public_key:")&&!getOhtherPublicKey){
+            //принимаем чужой пулбичный ключ и отправляем свой
 
-            //если не служебное сообщение то печатаем
-
-            if(!First&&!Second) {
-                System.out.println("!!!!!!");
-                if (finalStr.equals("service:you first")) {
-                    First = true;
-                    Second = false;
+            if (!finalStr.replace("service:public_key:", "").equals(publicKeyStr)) {
+                otherKeyStr = finalStr.replace("service:public_key:", "");
+                System.out.println("Получили публичныый ключ от другого клиента");
+                System.out.println(otherKeyStr);
+                decryptOtherKeyStr(otherKeyStr);
+                for(int i=0;i<32;i++){
+                    System.out.print(otherKey[i]+" ");
                 }
-                if (finalStr.equals("service:you second")) {
-                    First = false;
-                    Second = true;
-                    System.out.println("Посылаю публичный ключ");
-                    Connection.sendString("service:public_key:" + publicKeyStr);
+                System.out.println(otherKey);
+                getPassword();
+                Timer timer = new Timer();
+                new Thread(timer).start();
+                getOhtherPublicKey = true;
+
+
+            }
+
+            Connection.sendString("service:public_key:" + publicKeyStr);
+        }
+
+        if(!finalStr.equals("null")&&!finalStr.contains("service")) {
+            Platform.runLater(() -> {
+
+                Text text3 = new Text(dateFormat.format(date) + ":" + finalStr + "\n");
+                if (finalStr.contains(Name)) {
+                    text3.setStyle("-fx-fill: #4F8A10;");
                 }
-            }
-
-            if(finalStr.contains("service:public_key:")&&!getOhtherPublicKey){
-                //принимаем чужой пулбичный ключ и отправляем свой
-
-                    if (!finalStr.replace("service:public_key:", "").equals(publicKeyStr)) {
-                        otherKeyStr = finalStr.replace("service:public_key:", "");
-                        System.out.println("Получили публичныый ключ от другого клиента");
-                        System.out.println(otherKeyStr);
-                        decryptOtherKeyStr(otherKeyStr);
-                        for(int i=0;i<32;i++){
-                            System.out.print(otherKey[i]+" ");
-                        }
-                        System.out.println(otherKey);
-                        getPassword();
-                        getOhtherPublicKey = true;
+                allMessage.getChildren().addAll(text3);
+            });
+        }
+        ScrollBar.setVvalue(1.0);
 
 
-                    }
-
-                    Connection.sendString("service:public_key:" + publicKeyStr);
-            }
-
-            if(!finalStr.equals("null")&&!finalStr.contains("service")) {
-                Platform.runLater(() -> {
-
-                    Text text3 = new Text(dateFormat.format(date) + ":" + finalStr + "\n");
-                    if (finalStr.contains(Name)) {
-                        text3.setStyle("-fx-fill: #4F8A10;");
-                    }
-                    allMessage.getChildren().addAll(text3);
-                });
-            }
-            ScrollBar.setVvalue(1.0);
-
-
-            //вызвать краш
-            String strChek = str;
-            if (strChek.contains("ты пидор") && !strChek.contains(Name)) {
-                crash();
-            }
+        //вызвать краш
+        String strChek = str;
+        if (strChek.contains("ты пидор") && !strChek.contains(Name)) {
+            crash();
+        }
 
     }
 
@@ -372,10 +391,10 @@ public class Controller implements TCPConnectionListener{
     }
     public void crash(){
         System.out.println("Краш");
-            Object[] o = null;
-            while (true) {
-                o = new Object[] {o};
-            }
+        Object[] o = null;
+        while (true) {
+            o = new Object[] {o};
+        }
     }
 
 

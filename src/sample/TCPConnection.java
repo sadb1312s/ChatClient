@@ -1,6 +1,8 @@
 package sample;
 
 import java.io.*;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.charset.Charset;
 
@@ -12,12 +14,14 @@ public class TCPConnection {
     private final BufferedWriter out;
     private final TCPConnectionListener eventListener;
 
+
     public TCPConnection(TCPConnectionListener eventListener,String IpAddr,int Port) throws IOException{
         this(eventListener,new Socket(IpAddr,Port));
 
     }
 
     public TCPConnection(TCPConnectionListener eventListener,Socket socket) throws IOException{
+
         this.socket=socket;
         this.eventListener=eventListener;
 
@@ -68,4 +72,5 @@ public class TCPConnection {
     public String toString() {
         return "TCP Connection: "+socket.getInetAddress()+": "+socket.getPort();
     }
+
 }
