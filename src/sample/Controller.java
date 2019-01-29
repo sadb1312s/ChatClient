@@ -64,7 +64,7 @@ public class Controller implements TCPConnectionListener{
     //сетевые переменные
     private static String ip ="gavnotest1488.ddns.net";
     private static int port=8199;
-    private TCPConnection Connection;
+    private static TCPConnection Connection;
     private String Name="";
     public static boolean connect=false;
     Date date;
@@ -72,6 +72,7 @@ public class Controller implements TCPConnectionListener{
 
 
     //для шифрования
+    Cypher cypher = new Cypher();
 
     private BigInteger generator=BigInteger.valueOf(3);//генератор
     private BigInteger modul=BigInteger.valueOf(17);//модуль
@@ -81,18 +82,10 @@ public class Controller implements TCPConnectionListener{
     private boolean getOhtherPublicKey=false;//получили публичный ключ от другого клиента
     public static boolean needGenNewKey=false;
 
-    private BigInteger[] publicKey = new BigInteger[32];
-    private BigInteger[] privateKey = new BigInteger[32];
-    private BigInteger[] otherKey = new BigInteger[32];
-    private String publicKeyStr;
-    private String privateKeyStr;
-    private String otherKeyStr;
 
-    private String password;
-    //private String salt = KeyGenerators.string().generateKey();
-    private String salt="324fee14e5b58635";
 
-    //private TextEncryptor encryptor = Encryptors.text(password, salt);
+
+    //private TextEncryptor encryptor = Encryptors.text(passwordStr, salt);
     private TextEncryptor encryptor;
 
     public void initialize() {
@@ -109,10 +102,6 @@ public class Controller implements TCPConnectionListener{
         ScrollBar.setFitToWidth(true);
 
         //генерируем ключи
-        genKey();
-        System.out.println("в виде строк");
-        System.out.println(privateKeyStr);
-        System.out.println(publicKeyStr);
     }
 
     private void run(){
@@ -176,20 +165,10 @@ public class Controller implements TCPConnectionListener{
         boolean serviceMsg=false;
         String msg=Name+" "+outMessage.getText();
 
-        if(msg.contains("/get pass")){
-            serviceMsg=true;
-            printServiceMesage("pass = "+password);
-        }
-
-        if(msg.contains("/get salt")){
-            serviceMsg=true;
-            printServiceMesage("salt = "+salt);
-        }
-
         if(!serviceMsg) {
             //spring security
             //шифрование
-            encryptor = Encryptors.text(password, salt);
+            encryptor = Encryptors.text(String.valueOf(cypher.passwordStr), cypher.salt);
             String cipherText = encryptor.encrypt(msg);
             System.out.println("шифрование " + cipherText);
             //дешифрование
@@ -205,10 +184,9 @@ public class Controller implements TCPConnectionListener{
         }
     }
 
-
     private String decrypt(String msg){
         //System.out.println("-------------------up-----------------------");
-        encryptor = Encryptors.text(password, salt);
+        encryptor = Encryptors.text(String.valueOf(cypher.passwordStr), cypher.salt);
         System.out.println("Расшифровка");
         //System.out.println(">"+msg);
         String decryptedText;
@@ -228,7 +206,7 @@ public class Controller implements TCPConnectionListener{
     }
 
     private synchronized void printMesage(String str){
-        //System.out.println(">"+str);
+        System.out.println("новое сообщение"+str);
         if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")&&!str.contains("service:")) {
             //System.out.println("Нужно расшифровать "+str);
             str = decrypt(str);
@@ -239,25 +217,20 @@ public class Controller implements TCPConnectionListener{
         date = new Date();
         String finalStr = str;
 
-        //если не служебное сообщение то печатаем
-        if(needGenNewKey){
-            getOhtherPublicKey=false;
-
-            publicKey = new BigInteger[32];
-            privateKey = new BigInteger[32];
-            otherKey = new BigInteger[32];
-            publicKeyStr="";
-            privateKeyStr="";
-            otherKeyStr="";
+        if(Cypher.needGenNewKey){
+            System.out.println(Cypher.needGenNewKey);
+            cypher = new Cypher();
+            Cypher.needGenNewKey=true;
 
             System.out.println("нужно сформировать новые ключи");
-            genKey();
             if(Second){
-                System.out.println("Посылаю публичный ключ");
-                Connection.sendString("service:public_key:" + publicKeyStr);
+                System.out.println("Посылаю генератор,модуль и свой публичный ключ");
+                String genmod = cypher.genGenMod();
+                Connection.sendString("service:public_key:" + genmod);
             }
-            needGenNewKey=false;
+            Cypher.needGenNewKey=false;
         }
+
         if(!First&&!Second) {
             System.out.println("!!!!!!");
             if (finalStr.equals("service:you first")) {
@@ -267,32 +240,32 @@ public class Controller implements TCPConnectionListener{
             if (finalStr.equals("service:you second")) {
                 First = false;
                 Second = true;
-                System.out.println("Посылаю публичный ключ");
-                Connection.sendString("service:public_key:" + publicKeyStr);
+                System.out.println("Посылаю генератор,модуль и свой публичный ключ");
+                String genmod = cypher.genGenMod();
+                Connection.sendString("service:public_key:" + genmod);
+
             }
         }
 
-        if(finalStr.contains("service:public_key:")&&!getOhtherPublicKey){
-            //принимаем чужой пулбичный ключ и отправляем свой
-
-            if (!finalStr.replace("service:public_key:", "").equals(publicKeyStr)) {
-                otherKeyStr = finalStr.replace("service:public_key:", "");
-                System.out.println("Получили публичныый ключ от другого клиента");
-                System.out.println(otherKeyStr);
-                decryptOtherKeyStr(otherKeyStr);
-                for(int i=0;i<32;i++){
-                    System.out.print(otherKey[i]+" ");
-                }
-                System.out.println(otherKey);
-                getPassword();
+        if(finalStr.contains("service:public_key:")){
+            if(!cypher.GenModIsGenerate&&!cypher.setOtherKeyB){
+                System.out.println("Принили модуль генератор и публичный ключ от другого клиента");
+                cypher.setGenMod(finalStr.replace("service:public_key:",""));
+                System.out.println(cypher.publicKey);
+                date = new Date();
+                System.out.println("Посылаем свой публичный ключ "+cypher.publicKey);
+                Connection.sendString("service:public_key:"+ String.valueOf(cypher.publicKey));
+                System.out.println("отсюда");
                 Timer timer = new Timer();
                 new Thread(timer).start();
-                getOhtherPublicKey = true;
-
-
             }
-
-            Connection.sendString("service:public_key:" + publicKeyStr);
+            if(cypher.GenModIsGenerate&&!cypher.setOtherKeyB&&!finalStr.contains(String.valueOf(cypher.publicKey))){
+                System.out.println("сюда");
+                System.out.println("Чужой ключ "+finalStr);
+                cypher.setOtherKey(finalStr.replace("service:public_key:",""));
+                Timer timer = new Timer();
+                new Thread(timer).start();
+            }
         }
 
         if(!finalStr.equals("null")&&!finalStr.contains("service")) {
@@ -315,80 +288,7 @@ public class Controller implements TCPConnectionListener{
         }
 
     }
-
-    private synchronized void printServiceMesage(String str){
-        System.out.println(">"+str);
-
-        date = new Date();
-        String finalStr = str;
-        Platform.runLater(() -> {
-            Text text3 = new Text(dateFormat.format(date) + ":" + finalStr + "\n");
-            if (finalStr.contains(Name)) {
-                text3.setStyle("-fx-fill: #4F8A10;");
-            }
-            allMessage.getChildren().addAll(text3);
-        });
-        ScrollBar.setVvalue(1.0);
-
-
-
-
-    }
-
-
     //генерация ключей
-    private void genKey(){
-        //формируем приватный ключ
-        Random random = new Random();
-        for(int i=0;i<32;i++) {
-            int x = 1000+random.nextInt(256);
-            privateKey[i]= BigInteger.valueOf(x);
-            privateKeyStr+=privateKey[i]+" ";
-
-        }
-        privateKeyStr=privateKeyStr.replace("null","");
-        //формируем публичный ключ
-        for(int i=0;i<32;i++) {
-            BigInteger result=generator.modPow(privateKey[i], modul);
-            publicKey[i]=result;
-            publicKeyStr+=publicKey[i]+" ";
-        }
-        publicKeyStr=publicKeyStr.replace("null","");
-    }
-    //расшифровка публичного ключа(строки) в массив
-    private void decryptOtherKeyStr(String otherKeyStr){
-        System.out.println("Преобразуем ключ");
-        int p1=0;
-        int index=0;
-
-        for(int i=1;i<otherKeyStr.length()+1;i++){
-
-            if(otherKeyStr.substring(i-1,i).equals(" ")){
-                int x=0;
-                x=Integer.parseInt(otherKeyStr.substring(p1,i-1));
-                otherKey[index] = BigInteger.valueOf(x);
-                index++;
-
-                p1=i;
-            }
-        }
-
-    }
-    //ключ для шифрование сообщение(aes256)
-    private void getPassword(){
-        String keyString="";
-        for(int i=0;i<32;i++){
-
-
-            BigInteger key = otherKey[i].modPow(privateKey[i],modul);
-            int x2 = 50+key.intValue();
-            char ch = (char)x2;
-            keyString+=ch;
-        }
-        password=keyString;
-        System.out.println();
-        System.out.println(keyString);
-    }
     public void crash(){
         System.out.println("Краш");
         Object[] o = null;
@@ -396,8 +296,6 @@ public class Controller implements TCPConnectionListener{
             o = new Object[] {o};
         }
     }
-
-
     //методы tcp connection
     @Override
     public void onConnectionReady(TCPConnection tcpConnection) {

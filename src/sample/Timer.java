@@ -21,9 +21,8 @@ public class Timer extends Task {
             //System.out.println(FinalTime);
             if(FinalTime==60){
                 startTime=System.nanoTime();
-                Controller.needGenNewKey=true;
+                Cypher.needGenNewKey=true;
                 System.out.println(Controller.needGenNewKey);
-
             }
         }
     }
