@@ -1,6 +1,5 @@
 package sample;
 
-
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -12,21 +11,13 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-
 import java.io.IOException;
 import java.math.BigInteger;
-import java.security.Security;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Random;
-
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
-import org.springframework.security.crypto.keygen.KeyGenerators;
-
-import javax.crypto.Cipher;
-
 
 public class Controller implements TCPConnectionListener{
 
@@ -211,6 +202,9 @@ public class Controller implements TCPConnectionListener{
             //System.out.println("Нужно расшифровать "+str);
             str = decrypt(str);
         }
+
+
+
         //System.out.println(str);
 
         //System.out.println("First? = "+First);
@@ -220,11 +214,23 @@ public class Controller implements TCPConnectionListener{
         if(Cypher.needGenNewKey){
             System.out.println(Cypher.needGenNewKey);
             cypher = new Cypher();
+
+
             Cypher.needGenNewKey=true;
 
             System.out.println("нужно сформировать новые ключи");
             if(Second){
                 System.out.println("Посылаю генератор,модуль и свой публичный ключ");
+
+                if(!str.equals("null")) {
+                    String finalStr1 = str;
+                    Platform.runLater(() -> {
+
+                        Text text3 = new Text(dateFormat.format(date) + ":" + "Посылаю генератор,модуль и свой публичный ключ" + "\n");
+                        allMessage.getChildren().addAll(text3);
+                    });
+                }
+
                 String genmod = cypher.genGenMod();
                 Connection.sendString("service:public_key:" + genmod);
             }
@@ -241,6 +247,17 @@ public class Controller implements TCPConnectionListener{
                 First = false;
                 Second = true;
                 System.out.println("Посылаю генератор,модуль и свой публичный ключ");
+
+                if(!str.equals("null")) {
+                    String finalStr1 = str;
+                    Platform.runLater(() -> {
+
+                        Text text3 = new Text(dateFormat.format(date) + ":" + "Посылаю генератор,модуль и свой публичный ключ" + "\n");
+                        allMessage.getChildren().addAll(text3);
+                    });
+                }
+
+
                 String genmod = cypher.genGenMod();
                 Connection.sendString("service:public_key:" + genmod);
 
@@ -249,6 +266,16 @@ public class Controller implements TCPConnectionListener{
 
         if(finalStr.contains("service:public_key:")){
             if(!cypher.GenModIsGenerate&&!cypher.setOtherKeyB){
+
+                if(!str.equals("null")) {
+                    String finalStr1 = str;
+                    Platform.runLater(() -> {
+
+                        Text text3 = new Text(dateFormat.format(date) + ":" + "Принили модуль генератор и публичный ключ от другого клиента" + "\n");
+                        allMessage.getChildren().addAll(text3);
+                    });
+                }
+
                 System.out.println("Принили модуль генератор и публичный ключ от другого клиента");
                 cypher.setGenMod(finalStr.replace("service:public_key:",""));
                 System.out.println(cypher.publicKey);
@@ -258,13 +285,41 @@ public class Controller implements TCPConnectionListener{
                 System.out.println("отсюда");
                 Timer timer = new Timer();
                 new Thread(timer).start();
+
+                if(!str.equals("null")) {
+                    String finalStr1 = str;
+                    Platform.runLater(() -> {
+
+                        Text text3 = new Text(dateFormat.format(date) + ":" + String.valueOf(cypher.password) + "\n");
+                        allMessage.getChildren().addAll(text3);
+                    });
+                }
             }
             if(cypher.GenModIsGenerate&&!cypher.setOtherKeyB&&!finalStr.contains(String.valueOf(cypher.publicKey))){
+
+                if(!str.equals("null")) {
+                    String finalStr1 = str;
+                    Platform.runLater(() -> {
+
+                        Text text3 = new Text(dateFormat.format(date) + ":" + "Принили чужой публичный ключ" + "\n");
+                        allMessage.getChildren().addAll(text3);
+                    });
+                }
+
                 System.out.println("сюда");
                 System.out.println("Чужой ключ "+finalStr);
                 cypher.setOtherKey(finalStr.replace("service:public_key:",""));
                 Timer timer = new Timer();
                 new Thread(timer).start();
+
+                if(!str.equals("null")) {
+                    String finalStr1 = str;
+                    Platform.runLater(() -> {
+
+                        Text text3 = new Text(dateFormat.format(date) + ":" + String.valueOf(cypher.password) + "\n");
+                        allMessage.getChildren().addAll(text3);
+                    });
+                }
             }
         }
 

@@ -84,13 +84,13 @@ public class Cypher {
         System.out.println("other key = "+otherKey);
         System.out.println("my public key = "+publicKey);
         System.out.println("password = "+password);
-        String passBit=""+password.toString(2);
-        System.out.println("password binary= "+passBit);
-        String codeText= new String(new BigInteger(passBit, 2).toByteArray());
-        codeText=codeText.replaceAll("\\s+","");
-        passwordStr=codeText.substring(0,32);
-        System.out.println("password char = "+passwordStr);
-        System.out.println("----------------------------");
+        //String passBit=""+password.toString(2);
+        //System.out.println("password binary= "+passBit);
+        //String codeText= new String(new BigInteger(passBit, 2).toByteArray());
+        //codeText=codeText.replaceAll("\\s+","");
+        //passwordStr=codeText.substring(0,32);
+        //System.out.println("password char = "+passwordStr);
+        //System.out.println("----------------------------");
 
 
     }
