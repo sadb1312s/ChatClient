@@ -1,11 +1,6 @@
 package sample;
 
-import sun.nio.cs.US_ASCII;
-
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 import java.util.Random;
 
 public class Cypher {
@@ -18,8 +13,8 @@ public class Cypher {
     public BigInteger publicKey;
     public BigInteger otherKey;
     public BigInteger password;
-    public String passwordStr;
-    private int keysSize=288;//288
+    public String passwordString;
+    private int keysSize=1024;//1024 бит
     //private String salt = KeyGenerators.string().generateKey();
     public String salt="324fee14e5b58635";
 
@@ -83,14 +78,26 @@ public class Cypher {
         System.out.println("mod = "+modul);
         System.out.println("other key = "+otherKey);
         System.out.println("my public key = "+publicKey);
-        System.out.println("password = "+password);
-        //String passBit=""+password.toString(2);
-        //System.out.println("password binary= "+passBit);
-        //String codeText= new String(new BigInteger(passBit, 2).toByteArray());
-        //codeText=codeText.replaceAll("\\s+","");
-        //passwordStr=codeText.substring(0,32);
-        //System.out.println("password char = "+passwordStr);
+        System.out.println("password dec= "+password );
+       /* String passBit=""+password.toString(2);
+        System.out.println("password binary= "+passBit);
+        String codeText= new String(new BigInteger(passBit, 2).toByteArray());
+        codeText=codeText.replaceAll("\\s+","");
+        passwordStr=codeText.substring(0,32);
+        System.out.println("password char = "+passwordStr);*/
+
+        String passStr=""+password.toString(2);
+        String codeText= new String(new BigInteger(passStr, 2).toByteArray());
+        codeText=codeText.replaceAll("\\s+","");
+        //codeText=codeText.replaceAll("[^a-zA-Z0-9!@#$%^&*()_+№;:?<>,./'|]","");
+        //codeText=codeText.replaceAll("[^!-ÿ]","");
+        codeText=codeText.replaceAll("[^a-zA-Z0-9!@#$%^&*()_+;:?]","");
+        if(codeText.length()>32) codeText=codeText.substring(0,32);
+        passwordString=codeText;
+        System.out.println("Final password = "+passwordString+": "+passwordString.length());
         //System.out.println("----------------------------");
+
+
 
 
     }

@@ -16,6 +16,9 @@ import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+
+
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
@@ -55,12 +58,12 @@ public class Controller implements TCPConnectionListener{
     //сетевые переменные
     private static String ip ="gavnotest1488.ddns.net";
     private static int port=8199;
-    private static TCPConnection Connection;
+    public static TCPConnection Connection;
     private String Name="";
     public static boolean connect=false;
     Date date;
     DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-
+    boolean isConnect=false;
 
     //для шифрования
     Cypher cypher = new Cypher();
@@ -96,6 +99,8 @@ public class Controller implements TCPConnectionListener{
     }
 
     private void run(){
+
+
 
         date = new Date();
 
@@ -144,10 +149,9 @@ public class Controller implements TCPConnectionListener{
     @FXML
     public void GetName(javafx.event.ActionEvent actionEvent) {
         Name=nickName.getText();
-        if(!Name.equals("")){
+        if(!Name.equals("")&&isConnect){
             getNamePane.requestFocus();
             outMessage.setDisable(false);
-
         }
     }
     //отправка сообщения
@@ -159,7 +163,7 @@ public class Controller implements TCPConnectionListener{
         if(!serviceMsg) {
             //spring security
             //шифрование
-            encryptor = Encryptors.text(String.valueOf(cypher.passwordStr), cypher.salt);
+            encryptor = Encryptors.text(String.valueOf(cypher.passwordString), cypher.salt);
             String cipherText = encryptor.encrypt(msg);
             System.out.println("шифрование " + cipherText);
             //дешифрование
@@ -177,7 +181,7 @@ public class Controller implements TCPConnectionListener{
 
     private String decrypt(String msg){
         //System.out.println("-------------------up-----------------------");
-        encryptor = Encryptors.text(String.valueOf(cypher.passwordStr), cypher.salt);
+        encryptor = Encryptors.text(String.valueOf(cypher.passwordString), cypher.salt);
         System.out.println("Расшифровка");
         //System.out.println(">"+msg);
         String decryptedText;
@@ -197,6 +201,10 @@ public class Controller implements TCPConnectionListener{
     }
 
     private synchronized void printMesage(String str){
+
+
+
+
         System.out.println("новое сообщение"+str);
         if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")&&!str.contains("service:")) {
             //System.out.println("Нужно расшифровать "+str);
@@ -261,6 +269,7 @@ public class Controller implements TCPConnectionListener{
                 String genmod = cypher.genGenMod();
                 Connection.sendString("service:public_key:" + genmod);
 
+
             }
         }
 
@@ -283,14 +292,20 @@ public class Controller implements TCPConnectionListener{
                 System.out.println("Посылаем свой публичный ключ "+cypher.publicKey);
                 Connection.sendString("service:public_key:"+ String.valueOf(cypher.publicKey));
                 System.out.println("отсюда");
+                if(!Name.equals(""))
+                    Platform.runLater( () -> outMessage.setDisable(false) );
+                isConnect=true;
+
                 Timer timer = new Timer();
                 new Thread(timer).start();
+
+
 
                 if(!str.equals("null")) {
                     String finalStr1 = str;
                     Platform.runLater(() -> {
 
-                        Text text3 = new Text(dateFormat.format(date) + ":" + String.valueOf(cypher.password) + "\n");
+                        Text text3 = new Text(dateFormat.format(date) + ":" + String.valueOf(cypher.passwordString) + "\n");
                         allMessage.getChildren().addAll(text3);
                     });
                 }
@@ -309,6 +324,11 @@ public class Controller implements TCPConnectionListener{
                 System.out.println("сюда");
                 System.out.println("Чужой ключ "+finalStr);
                 cypher.setOtherKey(finalStr.replace("service:public_key:",""));
+
+                if(!Name.equals(""))
+                    Platform.runLater( () -> outMessage.setDisable(false) );
+                isConnect=true;
+
                 Timer timer = new Timer();
                 new Thread(timer).start();
 
@@ -316,7 +336,7 @@ public class Controller implements TCPConnectionListener{
                     String finalStr1 = str;
                     Platform.runLater(() -> {
 
-                        Text text3 = new Text(dateFormat.format(date) + ":" + String.valueOf(cypher.password) + "\n");
+                        Text text3 = new Text(dateFormat.format(date) + ":" + String.valueOf(cypher.passwordString) + "\n");
                         allMessage.getChildren().addAll(text3);
                     });
                 }
