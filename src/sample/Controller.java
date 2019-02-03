@@ -1,14 +1,18 @@
 package sample;
 
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import java.io.IOException;
@@ -16,7 +20,7 @@ import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
+import java.util.concurrent.Callable;
 
 
 import org.springframework.security.crypto.encrypt.Encryptors;
@@ -33,8 +37,6 @@ public class Controller implements TCPConnectionListener{
     private TextField nickName;
     @FXML
     private StackPane getNamePane;
-    @FXML
-    private TextFlow allMessage;
     @FXML
     private TextField outMessage;
     @FXML
@@ -53,7 +55,10 @@ public class Controller implements TCPConnectionListener{
     private TextField Adress;
     @FXML
     private TextField Port;
+    @FXML
+    private GridPane allMessage;
 
+    int nMsg=0;
     //переменные
     //сетевые переменные
     private static String ip ="gavnotest1488.ddns.net";
@@ -83,11 +88,13 @@ public class Controller implements TCPConnectionListener{
     private TextEncryptor encryptor;
 
     public void initialize() {
+        ScrollBar.getStylesheets().add("sample/scroolpane.css");
         TryConnect.setOnAction(event -> {
             //сделать првоерку того что вводит пользователь
             Status.setFill(Color.BLUE);
             run();
         });
+
 
         Platform.runLater( () -> TopPane.requestFocus() );
         /*allMessage.setWrapText(true);*/
@@ -99,16 +106,14 @@ public class Controller implements TCPConnectionListener{
     }
 
     private void run(){
-
-
-
         date = new Date();
 
-        Text text = new Text(dateFormat.format(date)+ ":Проверка подключения к серверу"+"\r\n");
-        text.setStyle("-fx-fill: #004CA8;-fx-font-weight:bold;");
+        //Text text = new Text(dateFormat.format(date)+ ":Проверка подключения к серверу"+"\r\n");
+        //text.setStyle("-fx-fill: #004CA8;-fx-font-weight:bold;");
 
-        allMessage.getChildren().addAll(text);
+        //allMessage.getChildren().addAll(text);
 
+        //тестовоя проверка
         //allMessage.appendText("Проверка подключения к серверу"+"\r\n");
         Check check = new Check(ip,port);
         new Thread(check).start();
@@ -116,31 +121,27 @@ public class Controller implements TCPConnectionListener{
 
             if(connect){
                 date = new Date();
-                Text text1 = new Text(dateFormat.format(date)+ ":Подлючено успешно"+"\r\n");
-                text1.setStyle("-fx-fill: #4F8A10;-fx-font-weight:bold;");
-                allMessage.getChildren().addAll(text1);
-
+                //Text text1 = new Text(dateFormat.format(date)+ ":Подлючено успешно"+"\r\n");
+                //text1.setStyle("-fx-fill: #4F8A10;-fx-font-weight:bold;");
+                //allMessage.getChildren().addAll(text1);
                 Status.setFill(Color.GREEN);
+                //если тестовоя проверка прошла
                 try {
                     Connection = new TCPConnection(this,ip,port);
                 } catch (IOException e) {
                     System.out.println(">не удалось подключиться"+e);
 
                 }
-
                 nickName.setDisable(false);
                 allMessage.setDisable(false);
             }
-
-
-
         });
         check.setOnFailed(event -> {
             System.out.println("Connect="+connect);
             date = new Date();
-            Text text2 = new Text(dateFormat.format(date)+ ":не удалось подключиться"+"\r\n");
-            text2.setStyle("-fx-fill: #FF0000;-fx-font-weight:bold;");
-            allMessage.getChildren().addAll(text2);
+            //Text text2 = new Text(dateFormat.format(date)+ ":не удалось подключиться"+"\r\n");
+            //text2.setStyle("-fx-fill: #FF0000;-fx-font-weight:bold;");
+            //allMessage.getChildren().addAll(text2);
 
             Status.setFill(Color.RED);
         });
@@ -157,10 +158,11 @@ public class Controller implements TCPConnectionListener{
     //отправка сообщения
     @FXML
     public void sendMessage(javafx.event.ActionEvent actionEvent){
-        boolean serviceMsg=false;
-        String msg=Name+" "+outMessage.getText();
 
-        if(!serviceMsg) {
+
+
+
+        String msg=Name+"\n"+outMessage.getText();
             //spring security
             //шифрование
             encryptor = Encryptors.text(String.valueOf(cypher.passwordString), cypher.salt);
@@ -172,11 +174,9 @@ public class Controller implements TCPConnectionListener{
             if (msg.trim().length() > 0) {
                 System.out.println("Отправка");
                 outMessage.clear();
-
-
                 Connection.sendString(cipherText);
             }
-        }
+
     }
 
     private String decrypt(String msg){
@@ -202,43 +202,20 @@ public class Controller implements TCPConnectionListener{
 
     private synchronized void printMesage(String str){
 
-
-
-
-        System.out.println("новое сообщение"+str);
         if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")&&!str.contains("service:")) {
             //System.out.println("Нужно расшифровать "+str);
             str = decrypt(str);
         }
 
-
-
-        //System.out.println(str);
-
-        //System.out.println("First? = "+First);
+        //сервисные сообщения
         date = new Date();
         String finalStr = str;
 
         if(Cypher.needGenNewKey){
             System.out.println(Cypher.needGenNewKey);
             cypher = new Cypher();
-
-
             Cypher.needGenNewKey=true;
-
-            System.out.println("нужно сформировать новые ключи");
             if(Second){
-                System.out.println("Посылаю генератор,модуль и свой публичный ключ");
-
-                if(!str.equals("null")) {
-                    String finalStr1 = str;
-                    Platform.runLater(() -> {
-
-                        Text text3 = new Text(dateFormat.format(date) + ":" + "Посылаю генератор,модуль и свой публичный ключ" + "\n");
-                        allMessage.getChildren().addAll(text3);
-                    });
-                }
-
                 String genmod = cypher.genGenMod();
                 Connection.sendString("service:public_key:" + genmod);
             }
@@ -246,7 +223,6 @@ public class Controller implements TCPConnectionListener{
         }
 
         if(!First&&!Second) {
-            System.out.println("!!!!!!");
             if (finalStr.equals("service:you first")) {
                 First = true;
                 Second = false;
@@ -254,75 +230,27 @@ public class Controller implements TCPConnectionListener{
             if (finalStr.equals("service:you second")) {
                 First = false;
                 Second = true;
-                System.out.println("Посылаю генератор,модуль и свой публичный ключ");
-
-                if(!str.equals("null")) {
-                    String finalStr1 = str;
-                    Platform.runLater(() -> {
-
-                        Text text3 = new Text(dateFormat.format(date) + ":" + "Посылаю генератор,модуль и свой публичный ключ" + "\n");
-                        allMessage.getChildren().addAll(text3);
-                    });
-                }
-
-
                 String genmod = cypher.genGenMod();
                 Connection.sendString("service:public_key:" + genmod);
-
-
             }
         }
 
         if(finalStr.contains("service:public_key:")){
             if(!cypher.GenModIsGenerate&&!cypher.setOtherKeyB){
 
-                if(!str.equals("null")) {
-                    String finalStr1 = str;
-                    Platform.runLater(() -> {
 
-                        Text text3 = new Text(dateFormat.format(date) + ":" + "Принили модуль генератор и публичный ключ от другого клиента" + "\n");
-                        allMessage.getChildren().addAll(text3);
-                    });
-                }
-
-                System.out.println("Принили модуль генератор и публичный ключ от другого клиента");
                 cypher.setGenMod(finalStr.replace("service:public_key:",""));
-                System.out.println(cypher.publicKey);
                 date = new Date();
-                System.out.println("Посылаем свой публичный ключ "+cypher.publicKey);
                 Connection.sendString("service:public_key:"+ String.valueOf(cypher.publicKey));
-                System.out.println("отсюда");
                 if(!Name.equals(""))
                     Platform.runLater( () -> outMessage.setDisable(false) );
                 isConnect=true;
-
                 Timer timer = new Timer();
                 new Thread(timer).start();
 
-
-
-                if(!str.equals("null")) {
-                    String finalStr1 = str;
-                    Platform.runLater(() -> {
-
-                        Text text3 = new Text(dateFormat.format(date) + ":" + String.valueOf(cypher.passwordString) + "\n");
-                        allMessage.getChildren().addAll(text3);
-                    });
-                }
             }
             if(cypher.GenModIsGenerate&&!cypher.setOtherKeyB&&!finalStr.contains(String.valueOf(cypher.publicKey))){
 
-                if(!str.equals("null")) {
-                    String finalStr1 = str;
-                    Platform.runLater(() -> {
-
-                        Text text3 = new Text(dateFormat.format(date) + ":" + "Принили чужой публичный ключ" + "\n");
-                        allMessage.getChildren().addAll(text3);
-                    });
-                }
-
-                System.out.println("сюда");
-                System.out.println("Чужой ключ "+finalStr);
                 cypher.setOtherKey(finalStr.replace("service:public_key:",""));
 
                 if(!Name.equals(""))
@@ -332,25 +260,69 @@ public class Controller implements TCPConnectionListener{
                 Timer timer = new Timer();
                 new Thread(timer).start();
 
-                if(!str.equals("null")) {
-                    String finalStr1 = str;
-                    Platform.runLater(() -> {
 
-                        Text text3 = new Text(dateFormat.format(date) + ":" + String.valueOf(cypher.passwordString) + "\n");
-                        allMessage.getChildren().addAll(text3);
-                    });
-                }
             }
         }
 
-        if(!finalStr.equals("null")&&!finalStr.contains("service")) {
+        //сообщение для печати
+        if(!finalStr.equals("null")&&!finalStr.contains("service")&&!finalStr.contains("TCP")) {
             Platform.runLater(() -> {
 
-                Text text3 = new Text(dateFormat.format(date) + ":" + finalStr + "\n");
-                if (finalStr.contains(Name)) {
-                    text3.setStyle("-fx-fill: #4F8A10;");
+                TextArea area = new TextArea();
+
+                area.maxWidth(378);
+                area.minWidth(378);
+                area.setWrapText(true);
+
+
+
+
+                //азбираем строку
+                System.out.println(finalStr);
+
+
+
+                //------------------------------------
+                /*Text text = new Text(finalStr);
+                Font font = Font.font("Arial", 14);
+                text.setFont(font);
+                double width = text.getLayoutBounds().getWidth();
+                System.out.println(width);
+                double x =370;
+                if(width<x){
+                    System.out.println("меньше");
+                    area.setMaxHeight(2*15);
+                    area.setMinHeight(2*15);
+                    area.setMaxWidth(x);
+                }else{
+                    int u = (int) (width/x)+2;
+                    System.out.println(u);
+                    area.setMinHeight((u+3)*15);
+                    area.setMaxHeight((u+3)*15);
+                    area.setMaxWidth(x);
+                }*/
+
+
+                //-------------
+                area.setText(finalStr);
+
+                if(finalStr.contains(Name)) {
+                    area.setStyle("-fx-text-fill: WHITE;-fx-font-size: 14;-fx-font-family: Arial");
+                    area.getStylesheets().add("sample/text-area-background.css");
+
+                }else{
+                    area.setStyle("-fx-font-size: 14;-fx-font-family: Arial");
+                    area.getStylesheets().add("sample/text-area-background2.css");
                 }
-                allMessage.getChildren().addAll(text3);
+
+
+                allMessage.add(area,0,nMsg);
+
+                ScrollBar.setContent(allMessage);
+                ScrollBar.setVvalue(1.0);
+                ScrollBar.setVvalue(1.0);
+                nMsg++;
+
             });
         }
         ScrollBar.setVvalue(1.0);
@@ -363,7 +335,7 @@ public class Controller implements TCPConnectionListener{
         }
 
     }
-    //генерация ключей
+
     public void crash(){
         System.out.println("Краш");
         Object[] o = null;

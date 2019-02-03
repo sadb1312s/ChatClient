@@ -5,13 +5,12 @@ import javafx.concurrent.Task;
 import java.io.IOException;
 
 import static sample.Controller.connect;
+import static sample.Controller.Connection;
 
 public class Check extends Task implements TCPConnectionListener {
 
     String ip;
     int port;
-    public TCPConnection Connection;
-
 
     public Check(String ip,int port){
         this.ip=ip;
@@ -20,18 +19,14 @@ public class Check extends Task implements TCPConnectionListener {
 
     @Override
     public Void call() {
-        System.out.println("Тестовая проверка подключения");
         try {
             Connection = new TCPConnection(this,ip,port);
             connect=true;
         } catch (IOException e) {
-            System.out.println("Тест не пройден");
             connect=false;
         }
         Connection.disconnect();
         return null;
-
-
     }
 
     @Override
