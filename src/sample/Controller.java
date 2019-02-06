@@ -1,14 +1,21 @@
 package sample;
 
+import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -19,6 +26,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.Callable;
 
@@ -57,9 +65,13 @@ public class Controller implements TCPConnectionListener{
     private TextField Port;
     @FXML
     private GridPane allMessage;
+    @FXML
+    private AnchorPane MainPain;
 
     int nMsg=0;
+    double x=0;
     //переменные
+    boolean min=false;
     //сетевые переменные
     private static String ip ="gavnotest1488.ddns.net";
     private static int port=8199;
@@ -162,7 +174,15 @@ public class Controller implements TCPConnectionListener{
 
 
 
-        String msg=Name+"\n"+outMessage.getText();
+        String msg2=outMessage.getText();
+        msg2=msg2.trim();
+
+        if(msg2.equals(""))
+        {
+            outMessage.positionCaret( 0 );
+            return;
+        }
+        String msg=Name+"\n"+" "+msg2;
             //spring security
             //шифрование
             encryptor = Encryptors.text(String.valueOf(cypher.passwordString), cypher.salt);
@@ -264,65 +284,85 @@ public class Controller implements TCPConnectionListener{
             }
         }
 
+
         //сообщение для печати
-        if(!finalStr.equals("null")&&!finalStr.contains("service")&&!finalStr.contains("TCP")) {
+        if(!finalStr.equals("")&&!finalStr.equals("null")&&!finalStr.contains("service")&&!finalStr.contains("TCP")) {
             Platform.runLater(() -> {
 
+
                 TextArea area = new TextArea();
-
-                area.maxWidth(378);
-                area.minWidth(378);
+                area.setMaxWidth(570);
+                area.setMinWidth(100);
                 area.setWrapText(true);
-
-
-
-
-                //азбираем строку
-                System.out.println(finalStr);
-
+                area.setPrefHeight(100);
 
 
                 //------------------------------------
-                /*Text text = new Text(finalStr);
-                Font font = Font.font("Arial", 14);
-                text.setFont(font);
-                double width = text.getLayoutBounds().getWidth();
-                System.out.println(width);
-                double x =370;
-                if(width<x){
-                    System.out.println("меньше");
-                    area.setMaxHeight(2*15);
-                    area.setMinHeight(2*15);
-                    area.setMaxWidth(x);
-                }else{
-                    int u = (int) (width/x)+2;
-                    System.out.println(u);
-                    area.setMinHeight((u+3)*15);
-                    area.setMaxHeight((u+3)*15);
-                    area.setMaxWidth(x);
-                }*/
+
+                Label l = new Label(finalStr);
+                l.setLayoutY(400);
+                l.setLayoutX(1000);
+                l.setMaxWidth(570);
+                l.setWrapText(true);
+                MainPain.getChildren().add(l);
+
+
+
+                l.setStyle("-fx-background-color: gray;-fx-font-size:15;-fx-font-family: Arial");
+                l.heightProperty().addListener((obs , oldVal, newVal)->{
+                    System.out.println("> "+newVal);
+                    area.setPrefHeight(newVal.doubleValue()+10);
+                    area.setMinHeight(newVal.doubleValue()+10);
+                    area.setMaxHeight(newVal.doubleValue()+10);
+
+                });
+
+                l.widthProperty().addListener((obs , oldVal, newVal)->{
+                    x=(newVal.doubleValue());
+                    System.out.println("width = "+x);
+                    if(x<570) {
+                        area.setPrefWidth(newVal.doubleValue()+50);
+                        area.setMinWidth(newVal.doubleValue()+50);
+                        area.setMaxWidth(newVal.doubleValue()+50);
+
+                    }
+
+                });
+
+
+
 
 
                 //-------------
-                area.setText(finalStr);
+
 
                 if(finalStr.contains(Name)) {
-                    area.setStyle("-fx-text-fill: WHITE;-fx-font-size: 14;-fx-font-family: Arial");
+                    area.setStyle("-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial");
                     area.getStylesheets().add("sample/text-area-background.css");
-
+                    System.out.println("width = "+x);
+                    GridPane.setHalignment(area, HPos.RIGHT);
                 }else{
-                    area.setStyle("-fx-font-size: 14;-fx-font-family: Arial");
+
+                    area.setStyle("-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial");
                     area.getStylesheets().add("sample/text-area-background2.css");
+
                 }
+                area.setText(finalStr);
+
 
 
                 allMessage.add(area,0,nMsg);
 
                 ScrollBar.setContent(allMessage);
-                ScrollBar.setVvalue(1.0);
+                ScrollBar.applyCss();
+                ScrollBar.layout();
+                allMessage.applyCss();
+                allMessage.layout();
                 ScrollBar.setVvalue(1.0);
                 nMsg++;
 
+
+                System.gc();
             });
         }
         ScrollBar.setVvalue(1.0);
@@ -335,6 +375,8 @@ public class Controller implements TCPConnectionListener{
         }
 
     }
+
+
 
     public void crash(){
         System.out.println("Краш");
@@ -353,7 +395,9 @@ public class Controller implements TCPConnectionListener{
 
     @Override
     public void onRecieveReady(TCPConnection tcpConnection, String str) {
-        //System.out.println(str);
+        System.out.println(str);
+        str=str.trim();
+        System.out.println("! "+str);
         printMesage(str);
     }
 

@@ -22,7 +22,7 @@ public class Main extends Application  {
 
 
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
-        primaryStage.setScene(new Scene(root, 390, 600));
+        primaryStage.setScene(new Scene(root, 750, 600));
 
         //слушатель закрытия приложения
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
@@ -33,7 +33,7 @@ public class Main extends Application  {
             }
         });
 
-        primaryStage.setResizable(false);
+        //primaryStage.setResizable(false);
         primaryStage.show();
     }
 

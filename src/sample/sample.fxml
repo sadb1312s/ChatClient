@@ -12,9 +12,9 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<HBox prefHeight="600.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+<HBox prefHeight="600.0" prefWidth="750.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <children>
-      <AnchorPane maxHeight="-Infinity" maxWidth="400.0" minHeight="-Infinity" minWidth="400.0" prefHeight="600.0" prefWidth="400.0" style="-fx-background-color: #274568;">
+      <AnchorPane fx:id="MainPain" maxHeight="-Infinity" maxWidth="750.0" minHeight="-Infinity" minWidth="400.0" prefHeight="600.0" prefWidth="750.0" style="-fx-background-color: #030C2B;">
          <children>
             <AnchorPane fx:id="TopPane" prefHeight="150.0" prefWidth="400.0" style="-fx-background-color: #7598C2;">
                <children>
@@ -33,7 +33,7 @@
                <children>
                   <AnchorPane fx:id="nickNamePAne" prefHeight="50.0" prefWidth="400.0">
                      <children>
-                        <Text layoutX="14.0" layoutY="33.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Enter your name" wrappingWidth="143.13671875">
+                        <Text fill="WHITE" layoutX="14.0" layoutY="33.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Enter your name" wrappingWidth="143.13671875">
                            <font>
                               <Font size="18.0" />
                            </font>
@@ -47,14 +47,14 @@
                   </AnchorPane>
                </children>
             </StackPane>
-            <StackPane fx:id="outPane" layoutX="6.0" layoutY="550.0" prefHeight="50.0" prefWidth="388.0">
+            <StackPane fx:id="outPane" layoutX="6.0" layoutY="550.0" prefHeight="50.0" prefWidth="740.0">
                <children>
-                  <TextField fx:id="outMessage" disable="true" maxHeight="-Infinity" maxWidth="-Infinity" onAction="#sendMessage" prefHeight="39.0" prefWidth="390.0" style="-fx-background-color: white;" />
+                  <TextField fx:id="outMessage" disable="true" maxHeight="-Infinity" maxWidth="-Infinity" onAction="#sendMessage" prefHeight="39.0" prefWidth="735.0" style="-fx-background-color: white;" />
                </children>
             </StackPane>
-            <ScrollPane fx:id="ScrollBar" focusTraversable="false" layoutX="6.0" layoutY="205.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="345.0" prefWidth="388.0" style="-fx-background-color: #274568;">
+            <ScrollPane fx:id="ScrollBar" focusTraversable="false" layoutX="11.0" layoutY="205.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="345.0" prefWidth="735.0" style="-fx-background-color: #030C2B;">
                <content>
-                  <GridPane fx:id="allMessage" prefHeight="34.0" prefWidth="380.0" style="-fx-background-color: #274568;">
+                  <GridPane fx:id="allMessage" prefHeight="34.0" prefWidth="725.0" style="-fx-background-color: #030C2B;">
                      <columnConstraints>
                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
                      </columnConstraints>
