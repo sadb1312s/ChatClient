@@ -101,15 +101,18 @@ public class Controller implements TCPConnectionListener{
     private TextEncryptor encryptor;
 
     public void initialize() {
+        outMessage.setStyle("-fx-background-color:#4C5866;-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial");
+        System.out.println("начало");
+        run();
         ScrollBar.getStylesheets().add("sample/scroolpane.css");
-        TryConnect.setOnAction(event -> {
+        /*TryConnect.setOnAction(event -> {
             //сделать првоерку того что вводит пользователь
             Status.setFill(Color.BLUE);
             run();
-        });
+        });*/
 
 
-        Platform.runLater( () -> TopPane.requestFocus() );
+        //Platform.runLater( () -> TopPane.requestFocus() );
         /*allMessage.setWrapText(true);*/
 
 
@@ -121,8 +124,6 @@ public class Controller implements TCPConnectionListener{
     private void run(){
         date = new Date();
 
-
-
         //тестовоя проверка
         Check check = new Check(ip,port);
         new Thread(check).start();
@@ -130,7 +131,7 @@ public class Controller implements TCPConnectionListener{
 
             if(connect){
                 date = new Date();
-                Status.setFill(Color.GREEN);
+                //Status.setFill(Color.GREEN);
                 //если тестовоя проверка прошла
                 try {
                     Connection = new TCPConnection(this,ip,port);
@@ -300,7 +301,6 @@ public class Controller implements TCPConnectionListener{
                     area.setPrefHeight(newVal.doubleValue()+10);
                     area.setMinHeight(newVal.doubleValue()+10);
                     area.setMaxHeight(newVal.doubleValue()+10);
-
                 });
 
                 l.widthProperty().addListener((obs , oldVal, newVal)->{
@@ -323,7 +323,11 @@ public class Controller implements TCPConnectionListener{
                 );
 
 
-                if(finalStr.contains(Name)) {
+                int x=finalStr.indexOf(" ");
+                System.out.println("x = "+x);
+                System.out.println(finalStr.substring(0,x-1));
+                String nameTemp=finalStr.substring(0,x-1);
+                if(nameTemp.equals(Name)) {
                     area.setStyle("-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial");
                     area.getStylesheets().add("sample/text-area-background.css");
                     System.out.println("width = "+x);
