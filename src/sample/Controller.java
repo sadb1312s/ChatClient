@@ -5,6 +5,7 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -120,22 +121,15 @@ public class Controller implements TCPConnectionListener{
     private void run(){
         date = new Date();
 
-        //Text text = new Text(dateFormat.format(date)+ ":Проверка подключения к серверу"+"\r\n");
-        //text.setStyle("-fx-fill: #004CA8;-fx-font-weight:bold;");
 
-        //allMessage.getChildren().addAll(text);
 
         //тестовоя проверка
-        //allMessage.appendText("Проверка подключения к серверу"+"\r\n");
         Check check = new Check(ip,port);
         new Thread(check).start();
         check.setOnSucceeded(event -> {
 
             if(connect){
                 date = new Date();
-                //Text text1 = new Text(dateFormat.format(date)+ ":Подлючено успешно"+"\r\n");
-                //text1.setStyle("-fx-fill: #4F8A10;-fx-font-weight:bold;");
-                //allMessage.getChildren().addAll(text1);
                 Status.setFill(Color.GREEN);
                 //если тестовоя проверка прошла
                 try {
@@ -151,10 +145,6 @@ public class Controller implements TCPConnectionListener{
         check.setOnFailed(event -> {
             System.out.println("Connect="+connect);
             date = new Date();
-            //Text text2 = new Text(dateFormat.format(date)+ ":не удалось подключиться"+"\r\n");
-            //text2.setStyle("-fx-fill: #FF0000;-fx-font-weight:bold;");
-            //allMessage.getChildren().addAll(text2);
-
             Status.setFill(Color.RED);
         });
     }
@@ -200,10 +190,8 @@ public class Controller implements TCPConnectionListener{
     }
 
     private String decrypt(String msg){
-        //System.out.println("-------------------up-----------------------");
         encryptor = Encryptors.text(String.valueOf(cypher.passwordString), cypher.salt);
         System.out.println("Расшифровка");
-        //System.out.println(">"+msg);
         String decryptedText;
         try {
             decryptedText = encryptor.decrypt(msg);
@@ -211,9 +199,7 @@ public class Controller implements TCPConnectionListener{
         }catch (IllegalStateException e){
             decryptedText ="не удалось расшифровать";
         }
-        //System.out.println(decryptedText);
-        //System.out.println("!"+decryptedText);
-        //System.out.println("-------------------down---------------------");
+
         return  decryptedText;
 
 
@@ -291,8 +277,8 @@ public class Controller implements TCPConnectionListener{
 
 
                 TextArea area = new TextArea();
-                area.setMaxWidth(570);
-                area.setMinWidth(100);
+                area.setMaxWidth(520);
+                area.setMinWidth(520);
                 area.setWrapText(true);
                 area.setPrefHeight(100);
 
@@ -302,7 +288,7 @@ public class Controller implements TCPConnectionListener{
                 Label l = new Label(finalStr);
                 l.setLayoutY(400);
                 l.setLayoutX(1000);
-                l.setMaxWidth(570);
+                l.setMaxWidth(500);
                 l.setWrapText(true);
                 MainPain.getChildren().add(l);
 
@@ -320,20 +306,21 @@ public class Controller implements TCPConnectionListener{
                 l.widthProperty().addListener((obs , oldVal, newVal)->{
                     x=(newVal.doubleValue());
                     System.out.println("width = "+x);
-                    if(x<570) {
+                    if(x<520) {
                         area.setPrefWidth(newVal.doubleValue()+50);
                         area.setMinWidth(newVal.doubleValue()+50);
                         area.setMaxWidth(newVal.doubleValue()+50);
 
                     }
-
                 });
 
-
-
-
-
-                //-------------
+                allMessage.heightProperty().addListener(
+                        (observable, oldValue, newValue) -> {
+                            ScrollBar.applyCss();
+                            ScrollBar.layout();
+                            ScrollBar.setVvalue( 1.0d );
+                        }
+                );
 
 
                 if(finalStr.contains(Name)) {
@@ -348,24 +335,26 @@ public class Controller implements TCPConnectionListener{
 
                 }
                 area.setText(finalStr);
-
+                area.applyCss();
+                area.layout();
 
 
                 allMessage.add(area,0,nMsg);
-
-                ScrollBar.setContent(allMessage);
-                ScrollBar.applyCss();
-                ScrollBar.layout();
                 allMessage.applyCss();
-                allMessage.layout();
-                ScrollBar.setVvalue(1.0);
+                //allMessage.layout();
+               // ScrollBar.applyCss();
+                //ScrollBar.layout();
+                //ScrollBar.setVvalue(1.0d);
+                //ScrollBar.setContent(allMessage);
+                //ScrollBar.applyCss();
+                //ScrollBar.layout();
                 nMsg++;
 
 
                 System.gc();
             });
         }
-        ScrollBar.setVvalue(1.0);
+
 
 
         //вызвать краш
