@@ -1,39 +1,44 @@
 package sample;
 
-import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.control.*;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.*;
+import javafx.scene.Group;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import java.io.IOException;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import org.springframework.security.crypto.encrypt.Encryptors;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
+import sun.misc.BASE64Decoder;
+import sun.misc.BASE64Encoder;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.concurrent.Callable;
 
-
-import org.springframework.security.crypto.encrypt.Encryptors;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 public class Controller implements TCPConnectionListener{
 
@@ -68,6 +73,8 @@ public class Controller implements TCPConnectionListener{
     private GridPane allMessage;
     @FXML
     private AnchorPane MainPain;
+    @FXML
+    private AnchorPane DropPane;
 
     int nMsg=0;
     double x=0;
@@ -105,16 +112,78 @@ public class Controller implements TCPConnectionListener{
         System.out.println("начало");
         run();
         ScrollBar.getStylesheets().add("sample/scroolpane.css");
-        /*TryConnect.setOnAction(event -> {
-            //сделать првоерку того что вводит пользователь
-            Status.setFill(Color.BLUE);
-            run();
-        });*/
+
+        //drag and drop
+        DropPane.setStyle("-fx-background-color: rgba(0,0,0,0.7)");
+        MainPain.setOnDragOver(event -> {
+            Dragboard db = event.getDragboard();
+            boolean isAccepted = db.getFiles().get(0).getName().toLowerCase().endsWith(".png")
+                    || db.getFiles().get(0).getName().toLowerCase().endsWith(".jpeg")
+                    || db.getFiles().get(0).getName().toLowerCase().endsWith(".jpg");
+
+            if (db.hasFiles()) {
+                if (isAccepted) {
+                    DropPane.setVisible(true);
+                    event.acceptTransferModes(TransferMode.COPY);
+                }
+            } else {
+                event.consume();
+            }
+        });
+        MainPain.setOnDragDropped(event3 -> {
+
+            Dragboard db = event3.getDragboard();
+            boolean success = false;
+            if (db.hasFiles()) {
+                success = true;
+                File file = db.getFiles().get(0);
+
+                try {
+                    Group group5 = new Group();
+
+                    Image img = new Image(new FileInputStream(file.getAbsolutePath()));
+                    ImageView imageView = new ImageView();
+                    imageView.setImage(img);
+
+                    //отправка
+                    BufferedImage bImage = SwingFXUtils.fromFXImage(imageView.getImage(), null);
+                    ByteArrayOutputStream s = new ByteArrayOutputStream();
+                    try {
+                        ImageIO.write(bImage, "png", s);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    byte[] res  = s.toByteArray();
+                    String str=new String(res);
+                    System.out.println(">"+str);
+
+                    BASE64Encoder encoder = new BASE64Encoder();
+                    String imageString = encoder.encode(res);
+                    System.out.println(">"+imageString+"<");
+                    String msg=Name+"\n"+" "+"</ImageBytes>"+imageString;
+                    sendImage(msg);
 
 
-        //Platform.runLater( () -> TopPane.requestFocus() );
-        /*allMessage.setWrapText(true);*/
 
+
+                }catch (FileNotFoundException ignored) {
+
+                }
+
+
+            }
+        });
+        MainPain.setOnDragExited(event4 ->{
+            DropPane.setVisible(false);
+        });
+
+        allMessage.heightProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    ScrollBar.applyCss();
+                    ScrollBar.layout();
+                    ScrollBar.setVvalue( 1.0d );
+                }
+        );
 
         ScrollBar.setFitToWidth(true);
 
@@ -189,6 +258,12 @@ public class Controller implements TCPConnectionListener{
             }
 
     }
+    private synchronized void sendImage(String str){
+        encryptor = Encryptors.text(String.valueOf(cypher.passwordString), cypher.salt);
+        String cipherText = encryptor.encrypt(str);
+        Connection.sendString(cipherText);
+    }
+
 
     private String decrypt(String msg){
         encryptor = Encryptors.text(String.valueOf(cypher.passwordString), cypher.salt);
@@ -209,10 +284,10 @@ public class Controller implements TCPConnectionListener{
 
     private synchronized void printMesage(String str){
 
-        if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")&&!str.contains("service:")) {
+        /*if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")&&!str.contains("service:")) {
             //System.out.println("Нужно расшифровать "+str);
             str = decrypt(str);
-        }
+        }*/
 
         //сервисные сообщения
         date = new Date();
@@ -368,7 +443,153 @@ public class Controller implements TCPConnectionListener{
         }
 
     }
+    private synchronized void printImage(String str){
+        Platform.runLater(() -> {
+                String imageStr;
+                int x =str.indexOf(">");
+                imageStr = str.substring(x+1,str.length());
 
+                BufferedImage image = null;
+                byte[] imageByte = new byte[0];
+                try {
+                    BASE64Decoder decoder = new BASE64Decoder();
+                    imageByte = decoder.decodeBuffer(imageStr);
+                    ByteArrayInputStream bis = new ByteArrayInputStream(imageByte);
+                    image = ImageIO.read(bis);
+                    bis.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                Image image2 = SwingFXUtils.toFXImage(image, null);
+                Group group6 = new Group();
+                ImageView imageView4 = new ImageView();
+                imageView4.setImage(image2);
+                imageView4.setFitHeight(200);
+                imageView4.setFitWidth(350);
+                group6.getChildren().add(imageView4);
+                allMessage.add(group6,0,nMsg);
+                if(str.contains(Name)) {
+                    GridPane.setHalignment(group6, HPos.RIGHT);
+                }
+                if(!str.contains(Name)) {
+                    GridPane.setHalignment(group6, HPos.LEFT);
+                }
+
+                allMessage.heightProperty().addListener(
+                        (observable, oldValue, newValue) -> {
+                            ScrollBar.applyCss();
+                            ScrollBar.layout();
+                            ScrollBar.setVvalue( 1.0d );
+                        }
+                );
+
+                imageView4.setOnMousePressed(event->{
+
+
+
+                Stage stage2 = new Stage();
+                Group group2 = new Group();
+                Scene scene2 = new Scene(group2);
+
+                //stage2.initOwner(stage);
+                stage2.initStyle(StageStyle.TRANSPARENT);
+                stage2.setMaximized(true);
+
+                StackPane pane2 = new StackPane();
+                pane2.setStyle("-fx-background-color: BLACK");
+                pane2.setOpacity(0.9);
+
+                Button button2 = new Button("close");
+
+                ImageView imageView2 = new ImageView();
+
+
+                group2.getChildren().addAll(pane2,imageView2,button2);
+                scene2.setFill(null);
+                stage2.setScene(scene2);
+
+
+                button2.setOnAction(event2->{
+                    stage2.hide();
+                });
+
+                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+
+                double w=screenSize.getWidth();
+                double h=screenSize.getHeight();
+
+                double imgH=imageView4.getImage().getHeight();
+                double imgW=imageView4.getImage().getWidth();
+
+
+                pane2.setPrefSize(w,h);
+                imageView2.setFitHeight(h-100);
+                imageView2.setFitWidth(w-100);
+
+                imageView2.setImage(image2);
+
+                scene2.setOnScroll(event5->{
+                    double zoom;
+                    if(event5.getDeltaY()>0.0){
+
+                        zoom=1.5;
+                    }else{
+                        zoom=1/1.5;
+                    }
+
+                    imageView2.setScaleX(imageView2.getScaleX()*zoom);
+                    imageView2.setScaleY(imageView2.getScaleY()*zoom);
+
+                });
+
+                if((imgH+100)>h&&(imgW+100)>w){
+                    imageView2.setFitHeight(h-100);
+                    imageView2.setFitWidth(w-100);
+                    imageView2.setX(50);
+                    imageView2.setY(50);
+                }
+                if((imgH+100)<h&&(imgW+100)<w){
+                    imageView2.setFitHeight(imgH);
+                    imageView2.setFitWidth(imgW);
+                    imageView2.setX(((w)-imgW)/2);
+                    imageView2.setY(((h)-imgW)/2);
+                }
+                //перемещение
+                double[] mouseX = new double[2];
+                double[] mouseY = new double[2];
+
+                //перемещение изображений
+                scene2.setOnMousePressed(event7->{
+                    mouseX[1]=event7.getX();
+                    mouseY[1]=event7.getY();
+                    System.out.println("CLICK"+mouseX[1]+" "+mouseY[1]);
+                });
+
+
+
+                scene2.setOnMouseDragged(event6->{
+                    System.out.println("Move "+event6.getX()+" "+event6.getY());
+
+                    mouseX[0]=mouseX[1];
+                    mouseX[1]=event6.getX();
+
+                    mouseY[0]=mouseY[1];
+                    mouseY[1]=event6.getY();
+
+                    double finalX = mouseX[1]-mouseX[0];
+                    double finalY = mouseY[1]-mouseY[0];
+                    imageView2.setX(imageView2.getX()+finalX);
+                    imageView2.setY(imageView2.getY()+finalY);
+
+                });
+
+                stage2.show();
+
+            });
+                nMsg++;
+            });
+
+    }
 
 
     public void crash(){
@@ -391,7 +612,18 @@ public class Controller implements TCPConnectionListener{
         System.out.println(str);
         str=str.trim();
         System.out.println("! "+str);
-        printMesage(str);
+
+        if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")&&!str.contains("service:")) {
+            //System.out.println("Нужно расшифровать "+str);
+            str = decrypt(str);
+        }
+
+        if(str.contains("</ImageBytes>")){
+            printImage(str);
+        }else {
+            printMesage(str);
+        }
+        nMsg++;
     }
 
     @Override

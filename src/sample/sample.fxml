@@ -46,6 +46,15 @@
                   </GridPane>
                </content>
             </ScrollPane>
+            <AnchorPane fx:id="DropPane" layoutX="25.0" layoutY="25.0" prefHeight="550.0" prefWidth="700.0" stylesheets="@dropPane.css" visible="false">
+               <children>
+                  <Text fill="WHITE" layoutX="201.0" layoutY="291.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Drop image here">
+                     <font>
+                        <Font size="40.0" />
+                     </font>
+                  </Text>
+               </children>
+            </AnchorPane>
          </children>
       </AnchorPane>
    </children>
