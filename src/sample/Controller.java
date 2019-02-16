@@ -25,8 +25,6 @@ import javafx.scene.shape.Circle;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import org.springframework.security.crypto.encrypt.Encryptors;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 
@@ -91,27 +89,18 @@ public class Controller implements TCPConnectionListener{
     boolean isConnect=false;
 
     //для шифрования
-    Cypher cypher = new Cypher();
+    private Cypher cypher = new Cypher();
 
     private BigInteger generator=BigInteger.valueOf(3);//генератор
     private BigInteger modul=BigInteger.valueOf(17);//модуль
 
     private boolean First=false;//подключился первым
     private boolean Second=false;//подключился вторым
-    private boolean getOhtherPublicKey=false;//получили публичный ключ от другого клиента
-    public static boolean needGenNewKey=false;
-
-
-
-
-    //private TextEncryptor encryptor = Encryptors.text(passwordStr, salt);
-    private TextEncryptor encryptor;
 
     public void initialize() {
         outMessage.setStyle("-fx-background-color:#4C5866;-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial");
-        System.out.println("начало");
         run();
-        ScrollBar.getStylesheets().add("sample/scroolpane.css");
+        ScrollBar.getStylesheets().add("sample/style/scroolpane.css");
 
         //drag and drop
         DropPane.setStyle("-fx-background-color: rgba(0,0,0,0.7)");
@@ -133,13 +122,10 @@ public class Controller implements TCPConnectionListener{
         MainPain.setOnDragDropped(event3 -> {
 
             Dragboard db = event3.getDragboard();
-            boolean success = false;
             if (db.hasFiles()) {
-                success = true;
                 File file = db.getFiles().get(0);
 
                 try {
-                    Group group5 = new Group();
 
                     Image img = new Image(new FileInputStream(file.getAbsolutePath()));
                     ImageView imageView = new ImageView();
@@ -163,11 +149,7 @@ public class Controller implements TCPConnectionListener{
                     String msg=Name+"\n"+" "+"</ImageBytes>"+imageString;
                     sendImage(msg);
 
-
-
-
                 }catch (FileNotFoundException ignored) {
-
                 }
 
 
@@ -187,7 +169,6 @@ public class Controller implements TCPConnectionListener{
 
         ScrollBar.setFitToWidth(true);
 
-        //генерируем ключи
     }
 
     private void run(){
@@ -231,9 +212,6 @@ public class Controller implements TCPConnectionListener{
     @FXML
     public void sendMessage(javafx.event.ActionEvent actionEvent){
 
-
-
-
         String msg2=outMessage.getText();
         msg2=msg2.trim();
 
@@ -242,11 +220,10 @@ public class Controller implements TCPConnectionListener{
             outMessage.positionCaret( 0 );
             return;
         }
-        String msg=Name+"\n"+" "+msg2;
+        String msg=Name+":"+" "+msg2;
             //spring security
             //шифрование
-            encryptor = Encryptors.text(String.valueOf(cypher.passwordString), cypher.salt);
-            String cipherText = encryptor.encrypt(msg);
+            String cipherText = cypher.encrypt(msg);
             System.out.println("шифрование " + cipherText);
             //дешифрование
             //System.out.println("дешифрование "+decrypt(cipherText));
@@ -259,35 +236,10 @@ public class Controller implements TCPConnectionListener{
 
     }
     private synchronized void sendImage(String str){
-        encryptor = Encryptors.text(String.valueOf(cypher.passwordString), cypher.salt);
-        String cipherText = encryptor.encrypt(str);
-        Connection.sendString(cipherText);
+        Connection.sendString(cypher.encrypt(str));
     }
 
-
-    private String decrypt(String msg){
-        encryptor = Encryptors.text(String.valueOf(cypher.passwordString), cypher.salt);
-        System.out.println("Расшифровка");
-        String decryptedText;
-        try {
-            decryptedText = encryptor.decrypt(msg);
-            return decryptedText;
-        }catch (IllegalStateException e){
-            decryptedText ="не удалось расшифровать";
-        }
-
-        return  decryptedText;
-
-
-
-    }
-
-    private synchronized void printMesage(String str){
-
-        /*if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")&&!str.contains("service:")) {
-            //System.out.println("Нужно расшифровать "+str);
-            str = decrypt(str);
-        }*/
+    private synchronized void printMessage(String str){
 
         //сервисные сообщения
         date = new Date();
@@ -404,13 +356,13 @@ public class Controller implements TCPConnectionListener{
                 String nameTemp=finalStr.substring(0,x-1);
                 if(nameTemp.equals(Name)) {
                     area.setStyle("-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial");
-                    area.getStylesheets().add("sample/text-area-background.css");
+                    area.getStylesheets().add("sample/style/text-area-background.css");
                     System.out.println("width = "+x);
                     GridPane.setHalignment(area, HPos.RIGHT);
                 }else{
 
                     area.setStyle("-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial");
-                    area.getStylesheets().add("sample/text-area-background2.css");
+                    area.getStylesheets().add("sample/style/text-area-background2.css");
 
                 }
                 area.setText(finalStr);
@@ -445,48 +397,45 @@ public class Controller implements TCPConnectionListener{
     }
     private synchronized void printImage(String str){
         Platform.runLater(() -> {
-                String imageStr;
-                int x =str.indexOf(">");
-                imageStr = str.substring(x+1,str.length());
+            String imageStr;
+            int x =str.indexOf(">");
+            imageStr = str.substring(x+1,str.length());
 
-                BufferedImage image = null;
-                byte[] imageByte = new byte[0];
-                try {
-                    BASE64Decoder decoder = new BASE64Decoder();
-                    imageByte = decoder.decodeBuffer(imageStr);
-                    ByteArrayInputStream bis = new ByteArrayInputStream(imageByte);
-                    image = ImageIO.read(bis);
-                    bis.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                Image image2 = SwingFXUtils.toFXImage(image, null);
-                Group group6 = new Group();
-                ImageView imageView4 = new ImageView();
-                imageView4.setImage(image2);
-                imageView4.setFitHeight(200);
-                imageView4.setFitWidth(350);
-                group6.getChildren().add(imageView4);
-                allMessage.add(group6,0,nMsg);
-                if(str.contains(Name)) {
-                    GridPane.setHalignment(group6, HPos.RIGHT);
-                }
-                if(!str.contains(Name)) {
-                    GridPane.setHalignment(group6, HPos.LEFT);
-                }
+            BufferedImage image = null;
+            byte[] imageByte = new byte[0];
+            try {
+                BASE64Decoder decoder = new BASE64Decoder();
+                imageByte = decoder.decodeBuffer(imageStr);
+                ByteArrayInputStream bis = new ByteArrayInputStream(imageByte);
+                image = ImageIO.read(bis);
+                bis.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            Image image2 = SwingFXUtils.toFXImage(image, null);
+            Group group6 = new Group();
+            ImageView imageView4 = new ImageView();
+            imageView4.setImage(image2);
+            imageView4.setFitHeight(200);
+            imageView4.setFitWidth(350);
+            group6.getChildren().add(imageView4);
+            allMessage.add(group6,0,nMsg);
+            if(str.contains(Name)) {
+                GridPane.setHalignment(group6, HPos.RIGHT);
+                allMessage.setVgap(1); //vertical gap in pixels
+            }
+            if(!str.contains(Name)) {
+                GridPane.setHalignment(group6, HPos.LEFT);
+            }
 
-                allMessage.heightProperty().addListener(
-                        (observable, oldValue, newValue) -> {
-                            ScrollBar.applyCss();
-                            ScrollBar.layout();
-                            ScrollBar.setVvalue( 1.0d );
-                        }
-                );
+            allMessage.heightProperty().addListener(
+                    (observable, oldValue, newValue) -> {
+                        ScrollBar.applyCss();
+                        ScrollBar.layout();
+                        ScrollBar.setVvalue( 1.0d );
+                    });
 
-                imageView4.setOnMousePressed(event->{
-
-
-
+            imageView4.setOnMousePressed(event->{
                 Stage stage2 = new Stage();
                 Group group2 = new Group();
                 Scene scene2 = new Scene(group2);
@@ -552,7 +501,7 @@ public class Controller implements TCPConnectionListener{
                     imageView2.setFitHeight(imgH);
                     imageView2.setFitWidth(imgW);
                     imageView2.setX(((w)-imgW)/2);
-                    imageView2.setY(((h)-imgW)/2);
+                    imageView2.setY(((h)-imgH)/2);
                 }
                 //перемещение
                 double[] mouseX = new double[2];
@@ -564,8 +513,6 @@ public class Controller implements TCPConnectionListener{
                     mouseY[1]=event7.getY();
                     System.out.println("CLICK"+mouseX[1]+" "+mouseY[1]);
                 });
-
-
 
                 scene2.setOnMouseDragged(event6->{
                     System.out.println("Move "+event6.getX()+" "+event6.getY());
@@ -582,15 +529,12 @@ public class Controller implements TCPConnectionListener{
                     imageView2.setY(imageView2.getY()+finalY);
 
                 });
-
                 stage2.show();
 
             });
                 nMsg++;
-            });
-
+        });
     }
-
 
     public void crash(){
         System.out.println("Краш");
@@ -615,20 +559,20 @@ public class Controller implements TCPConnectionListener{
 
         if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")&&!str.contains("service:")) {
             //System.out.println("Нужно расшифровать "+str);
-            str = decrypt(str);
+            str = cypher.decrypt(str);
         }
 
         if(str.contains("</ImageBytes>")){
             printImage(str);
         }else {
-            printMesage(str);
+            printMessage(str);
         }
         nMsg++;
     }
 
     @Override
     public void onDisconect(TCPConnection tcpConnection) {
-        printMesage("Не удалось полкючиться к серверу");
+        printMessage("Не удалось полкючиться к серверу");
     }
 
     @Override

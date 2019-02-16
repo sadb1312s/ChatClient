@@ -31,7 +31,7 @@ public class Main extends Application  {
                 System.exit(0);
             }
         });
-        primaryStage.getIcons().add(new Image("sample/En2.png"));
+        primaryStage.getIcons().add(new Image("sample/style/En2.png"));
 
         //primaryStage.setResizable(false);
         //primaryStage.initStyle(StageStyle.TRANSPARENT);
