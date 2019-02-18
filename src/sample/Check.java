@@ -36,7 +36,7 @@ public class Check extends Task implements TCPConnectionListener {
 
     @Override
     public void onRecieveReady(TCPConnection tcpConnection, String str) {
-        System.out.println("Тестовое подключение прошло успешно");
+        //System.out.println("Тестовое подключение прошло успешно");
     }
 
     @Override

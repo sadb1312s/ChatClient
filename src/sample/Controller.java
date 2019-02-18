@@ -25,8 +25,6 @@ import javafx.scene.shape.Circle;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -35,7 +33,9 @@ import java.io.*;
 import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 
 
 public class Controller implements TCPConnectionListener{
@@ -121,39 +121,57 @@ public class Controller implements TCPConnectionListener{
         });
         MainPain.setOnDragDropped(event3 -> {
 
-            Dragboard db = event3.getDragboard();
-            if (db.hasFiles()) {
-                File file = db.getFiles().get(0);
 
+            Dragboard db = event3.getDragboard();
+            List<File> files = db.getFiles();
+
+
+
+
+            for(File object:files) {
+                System.out.println(object.getName());
                 try {
 
-                    Image img = new Image(new FileInputStream(file.getAbsolutePath()));
+                    Image img = new Image(new FileInputStream(object.getAbsolutePath()));
                     ImageView imageView = new ImageView();
                     imageView.setImage(img);
 
                     //отправка
-                    BufferedImage bImage = SwingFXUtils.fromFXImage(imageView.getImage(), null);
-                    ByteArrayOutputStream s = new ByteArrayOutputStream();
-                    try {
-                        ImageIO.write(bImage, "png", s);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    byte[] res  = s.toByteArray();
-                    String str=new String(res);
-                    System.out.println(">"+str);
 
-                    BASE64Encoder encoder = new BASE64Encoder();
-                    String imageString = encoder.encode(res);
-                    System.out.println(">"+imageString+"<");
-                    String msg=Name+"\n"+" "+"</ImageBytes>"+imageString;
-                    sendImage(msg);
+                    //Task task = new Task<Void>() {
+                        //@Override
+                        //protected Void call() throws Exception {
 
-                }catch (FileNotFoundException ignored) {
+
+
+                            BufferedImage bImage = SwingFXUtils.fromFXImage(imageView.getImage(), null);
+                            ByteArrayOutputStream s = new ByteArrayOutputStream();
+                            try {
+                                ImageIO.write(bImage, "png", s);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            byte[] res = s.toByteArray();
+                            String str = new String(res);
+
+
+                            String imageString = Base64.getEncoder().encodeToString(res);
+                            String msg = Name + "\n" + " " + "</ImageBytes>" + imageString;
+                            System.out.println("> "+imageString);
+                            sendImage(msg);
+                            //return null;
+                        //}
+
+                    //};
+                    //new Thread(task).start();
+
+                } catch (FileNotFoundException e) {
+                    System.out.println(e);
                 }
 
-
             }
+
+
         });
         MainPain.setOnDragExited(event4 ->{
             DropPane.setVisible(false);
@@ -186,7 +204,7 @@ public class Controller implements TCPConnectionListener{
                 try {
                     Connection = new TCPConnection(this,ip,port);
                 } catch (IOException e) {
-                    System.out.println(">не удалось подключиться"+e);
+                    //System.out.println(">не удалось подключиться"+e);
 
                 }
                 nickName.setDisable(false);
@@ -194,7 +212,7 @@ public class Controller implements TCPConnectionListener{
             }
         });
         check.setOnFailed(event -> {
-            System.out.println("Connect="+connect);
+            //System.out.println("Connect="+connect);
             date = new Date();
             Status.setFill(Color.RED);
         });
@@ -224,12 +242,12 @@ public class Controller implements TCPConnectionListener{
             //spring security
             //шифрование
             String cipherText = cypher.encrypt(msg);
-            System.out.println("шифрование " + cipherText);
+            //System.out.println("шифрование " + cipherText);
             //дешифрование
             //System.out.println("дешифрование "+decrypt(cipherText));
 
             if (msg.trim().length() > 0) {
-                System.out.println("Отправка");
+                //System.out.println("Отправка");
                 outMessage.clear();
                 Connection.sendString(cipherText);
             }
@@ -246,7 +264,7 @@ public class Controller implements TCPConnectionListener{
         String finalStr = str;
 
         if(Cypher.needGenNewKey){
-            System.out.println(Cypher.needGenNewKey);
+            //System.out.println(Cypher.needGenNewKey);
             cypher = new Cypher();
             Cypher.needGenNewKey=true;
             if(Second){
@@ -324,7 +342,7 @@ public class Controller implements TCPConnectionListener{
 
                 l.setStyle("-fx-background-color: gray;-fx-font-size:15;-fx-font-family: Arial");
                 l.heightProperty().addListener((obs , oldVal, newVal)->{
-                    System.out.println("> "+newVal);
+                    //System.out.println("> "+newVal);
                     area.setPrefHeight(newVal.doubleValue()+10);
                     area.setMinHeight(newVal.doubleValue()+10);
                     area.setMaxHeight(newVal.doubleValue()+10);
@@ -332,7 +350,7 @@ public class Controller implements TCPConnectionListener{
 
                 l.widthProperty().addListener((obs , oldVal, newVal)->{
                     x=(newVal.doubleValue());
-                    System.out.println("width = "+x);
+                    //System.out.println("width = "+x);
                     if(x<520) {
                         area.setPrefWidth(newVal.doubleValue()+50);
                         area.setMinWidth(newVal.doubleValue()+50);
@@ -351,13 +369,13 @@ public class Controller implements TCPConnectionListener{
 
 
                 int x=finalStr.indexOf(" ");
-                System.out.println("x = "+x);
-                System.out.println(finalStr.substring(0,x-1));
+                //System.out.println("x = "+x);
+                //System.out.println(finalStr.substring(0,x-1));
                 String nameTemp=finalStr.substring(0,x-1);
                 if(nameTemp.equals(Name)) {
                     area.setStyle("-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial");
                     area.getStylesheets().add("sample/style/text-area-background.css");
-                    System.out.println("width = "+x);
+                    //System.out.println("width = "+x);
                     GridPane.setHalignment(area, HPos.RIGHT);
                 }else{
 
@@ -397,147 +415,168 @@ public class Controller implements TCPConnectionListener{
     }
     private synchronized void printImage(String str){
         Platform.runLater(() -> {
-            String imageStr;
-            int x =str.indexOf(">");
-            imageStr = str.substring(x+1,str.length());
 
-            BufferedImage image = null;
-            byte[] imageByte = new byte[0];
-            try {
-                BASE64Decoder decoder = new BASE64Decoder();
-                imageByte = decoder.decodeBuffer(imageStr);
-                ByteArrayInputStream bis = new ByteArrayInputStream(imageByte);
-                image = ImageIO.read(bis);
-                bis.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            Image image2 = SwingFXUtils.toFXImage(image, null);
-            Group group6 = new Group();
-            ImageView imageView4 = new ImageView();
-            imageView4.setImage(image2);
-            imageView4.setFitHeight(200);
-            imageView4.setFitWidth(350);
-            group6.getChildren().add(imageView4);
-            allMessage.add(group6,0,nMsg);
-            if(str.contains(Name)) {
-                GridPane.setHalignment(group6, HPos.RIGHT);
-                allMessage.setVgap(1); //vertical gap in pixels
-            }
-            if(!str.contains(Name)) {
-                GridPane.setHalignment(group6, HPos.LEFT);
-            }
+                    String imageStr;
+                int x = str.indexOf(">");
+                imageStr = str.substring(x + 1, str.length());
+                 System.out.println(">! "+imageStr);
 
-            allMessage.heightProperty().addListener(
-                    (observable, oldValue, newValue) -> {
-                        ScrollBar.applyCss();
-                        ScrollBar.layout();
-                        ScrollBar.setVvalue( 1.0d );
+                BufferedImage image = null;
+                byte[] imageByte = new byte[0];
+                try {
+                    //BASE64Decoder decoder = new BASE64Decoder();
+                    //imageByte = decoder.decodeBuffer(imageStr);
+
+                    imageByte = Base64.getDecoder().decode(imageStr);
+
+                    ByteArrayInputStream bis = new ByteArrayInputStream(imageByte);
+                    image = ImageIO.read(bis);
+                    bis.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                Image image2 = SwingFXUtils.toFXImage(image, null);
+
+                Group group6 = new Group();
+                ImageView imageView4 = new ImageView();
+                imageView4.setImage(image2);
+                imageView4.setFitHeight(200);
+                imageView4.setFitWidth(350);
+                group6.getChildren().add(imageView4);
+
+
+                allMessage.add(group6, 0, nMsg);
+
+                            if (str.contains(Name)) {
+                                GridPane.setHalignment(group6, HPos.RIGHT);
+                                allMessage.setVgap(1); //vertical gap in pixels
+                            }
+                            if (!str.contains(Name)) {
+                                GridPane.setHalignment(group6, HPos.LEFT);
+                            }
+
+
+
+
+                allMessage.heightProperty().addListener(
+                        (observable, oldValue, newValue) -> {
+                            ScrollBar.applyCss();
+                            ScrollBar.layout();
+                            ScrollBar.setVvalue(1.0d);
+                        });
+
+                imageView4.setOnMousePressed(event -> {
+                    Stage stage2 = new Stage();
+                    Group group2 = new Group();
+                    Scene scene2 = new Scene(group2);
+
+                    //stage2.initOwner(stage);
+                    stage2.initStyle(StageStyle.TRANSPARENT);
+                    stage2.setMaximized(true);
+
+                    StackPane pane2 = new StackPane();
+                    pane2.setStyle("-fx-background-color: BLACK");
+                    pane2.setOpacity(0.9);
+
+                    Button button2 = new Button("close");
+
+                    ImageView imageView2 = new ImageView();
+
+
+                    group2.getChildren().addAll(pane2, imageView2, button2);
+                    scene2.setFill(null);
+                    stage2.setScene(scene2);
+
+
+                    button2.setOnAction(event2 -> {
+                        stage2.hide();
                     });
 
-            imageView4.setOnMousePressed(event->{
-                Stage stage2 = new Stage();
-                Group group2 = new Group();
-                Scene scene2 = new Scene(group2);
+                    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
-                //stage2.initOwner(stage);
-                stage2.initStyle(StageStyle.TRANSPARENT);
-                stage2.setMaximized(true);
+                    double w = screenSize.getWidth();
+                    double h = screenSize.getHeight();
 
-                StackPane pane2 = new StackPane();
-                pane2.setStyle("-fx-background-color: BLACK");
-                pane2.setOpacity(0.9);
-
-                Button button2 = new Button("close");
-
-                ImageView imageView2 = new ImageView();
+                    double imgH = imageView4.getImage().getHeight();
+                    double imgW = imageView4.getImage().getWidth();
 
 
-                group2.getChildren().addAll(pane2,imageView2,button2);
-                scene2.setFill(null);
-                stage2.setScene(scene2);
+                    pane2.setPrefSize(w, h);
+                    imageView2.setFitHeight(h - 100);
+                    imageView2.setFitWidth(w - 100);
 
+                    imageView2.setImage(image2);
 
-                button2.setOnAction(event2->{
-                    stage2.hide();
-                });
+                    scene2.setOnScroll(event5 -> {
+                        double zoom;
+                        if (event5.getDeltaY() > 0.0) {
 
-                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                            zoom = 1.5;
+                        } else {
+                            zoom = 1 / 1.5;
+                        }
 
-                double w=screenSize.getWidth();
-                double h=screenSize.getHeight();
+                        imageView2.setScaleX(imageView2.getScaleX() * zoom);
+                        imageView2.setScaleY(imageView2.getScaleY() * zoom);
 
-                double imgH=imageView4.getImage().getHeight();
-                double imgW=imageView4.getImage().getWidth();
+                    });
 
-
-                pane2.setPrefSize(w,h);
-                imageView2.setFitHeight(h-100);
-                imageView2.setFitWidth(w-100);
-
-                imageView2.setImage(image2);
-
-                scene2.setOnScroll(event5->{
-                    double zoom;
-                    if(event5.getDeltaY()>0.0){
-
-                        zoom=1.5;
-                    }else{
-                        zoom=1/1.5;
+                    if ((imgH + 100) > h && (imgW + 100) > w) {
+                        imageView2.setFitHeight(h - 100);
+                        imageView2.setFitWidth(w - 100);
+                        imageView2.setX(50);
+                        imageView2.setY(50);
                     }
+                    if ((imgH + 100) < h && (imgW + 100) < w) {
+                        imageView2.setFitHeight(imgH);
+                        imageView2.setFitWidth(imgW);
+                        imageView2.setX(((w) - imgW) / 2);
+                        imageView2.setY(((h) - imgH) / 2);
+                    }
+                    //перемещение
+                    double[] mouseX = new double[2];
+                    double[] mouseY = new double[2];
 
-                    imageView2.setScaleX(imageView2.getScaleX()*zoom);
-                    imageView2.setScaleY(imageView2.getScaleY()*zoom);
+                    //перемещение изображений
+                    scene2.setOnMousePressed(event7 -> {
+                        mouseX[1] = event7.getX();
+                        mouseY[1] = event7.getY();
+                        //System.out.println("CLICK"+mouseX[1]+" "+mouseY[1]);
+                    });
 
-                });
+                    scene2.setOnMouseDragged(event6 -> {
+                        //System.out.println("Move "+event6.getX()+" "+event6.getY());
 
-                if((imgH+100)>h&&(imgW+100)>w){
-                    imageView2.setFitHeight(h-100);
-                    imageView2.setFitWidth(w-100);
-                    imageView2.setX(50);
-                    imageView2.setY(50);
-                }
-                if((imgH+100)<h&&(imgW+100)<w){
-                    imageView2.setFitHeight(imgH);
-                    imageView2.setFitWidth(imgW);
-                    imageView2.setX(((w)-imgW)/2);
-                    imageView2.setY(((h)-imgH)/2);
-                }
-                //перемещение
-                double[] mouseX = new double[2];
-                double[] mouseY = new double[2];
+                        mouseX[0] = mouseX[1];
+                        mouseX[1] = event6.getX();
 
-                //перемещение изображений
-                scene2.setOnMousePressed(event7->{
-                    mouseX[1]=event7.getX();
-                    mouseY[1]=event7.getY();
-                    System.out.println("CLICK"+mouseX[1]+" "+mouseY[1]);
-                });
+                        mouseY[0] = mouseY[1];
+                        mouseY[1] = event6.getY();
 
-                scene2.setOnMouseDragged(event6->{
-                    System.out.println("Move "+event6.getX()+" "+event6.getY());
+                        double finalX = mouseX[1] - mouseX[0];
+                        double finalY = mouseY[1] - mouseY[0];
+                        imageView2.setX(imageView2.getX() + finalX);
+                        imageView2.setY(imageView2.getY() + finalY);
 
-                    mouseX[0]=mouseX[1];
-                    mouseX[1]=event6.getX();
-
-                    mouseY[0]=mouseY[1];
-                    mouseY[1]=event6.getY();
-
-                    double finalX = mouseX[1]-mouseX[0];
-                    double finalY = mouseY[1]-mouseY[0];
-                    imageView2.setX(imageView2.getX()+finalX);
-                    imageView2.setY(imageView2.getY()+finalY);
+                    });
+                    stage2.show();
 
                 });
-                stage2.show();
 
-            });
+
                 nMsg++;
+
+
+
+
+
+
         });
     }
 
     public void crash(){
-        System.out.println("Краш");
+        //System.out.println("Краш");
         Object[] o = null;
         while (true) {
             o = new Object[] {o};
@@ -546,16 +585,14 @@ public class Controller implements TCPConnectionListener{
     //методы tcp connection
     @Override
     public void onConnectionReady(TCPConnection tcpConnection) {
-        System.out.println("Connection ready");
-
-
+        //System.out.println("Connection ready");
     }
 
     @Override
     public void onRecieveReady(TCPConnection tcpConnection, String str) {
-        System.out.println(str);
+        //System.out.println(str);
         str=str.trim();
-        System.out.println("! "+str);
+        //System.out.println("! "+str);
 
         if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")&&!str.contains("service:")) {
             //System.out.println("Нужно расшифровать "+str);

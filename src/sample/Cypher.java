@@ -26,7 +26,7 @@ public class Cypher {
     }
 
     public String genGenMod(){
-        System.out.println("КЛАСС");
+        //System.out.println("КЛАСС");
         Random random = new Random();
         gen=new BigInteger(keysSize,random);
         modul=new BigInteger(keysSize,random);
@@ -36,9 +36,9 @@ public class Cypher {
     }
 
     public String setGenMod(String str){
-        System.out.println("КЛАСС");
-        System.out.println("Приняли ключи");
-        System.out.println(str);
+        //System.out.println("КЛАСС");
+        //System.out.println("Приняли ключи");
+        //System.out.println(str);
         String[] strt = new String[2];
         int p1=0;
         int p2=0;
@@ -65,8 +65,8 @@ public class Cypher {
     }
 
     public void setOtherKey(String str){
-        System.out.println("класс Приняли публичный ключ ключ другого клиента");
-        System.out.println(">>>"+str);
+        //System.out.println("класс Приняли публичный ключ ключ другого клиента");
+        //System.out.println(">>>"+str);
         otherKey= new BigInteger(str);
         setOtherKeyB=true;
         genPassword();
@@ -102,7 +102,7 @@ public class Cypher {
     }
 
     public String decrypt(String str){
-        System.out.println("Расшифровка");
+        //System.out.println("Расшифровка");
         String decryptedText;
         try {
             decryptedText = encryptor.decrypt(str);
