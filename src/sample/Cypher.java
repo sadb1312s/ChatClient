@@ -2,6 +2,7 @@ package sample;
 
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
+
 import java.math.BigInteger;
 import java.util.Random;
 
@@ -98,7 +99,11 @@ public class Cypher {
     }
 
     public String encrypt(String str){
-        return encryptor.encrypt(str);
+
+        String str2=encryptor.encrypt(str);
+        final byte[] b = str2.getBytes();
+        System.out.println(">>>"+b.length); // prints "11"
+        return str2;
     }
 
     public String decrypt(String str){

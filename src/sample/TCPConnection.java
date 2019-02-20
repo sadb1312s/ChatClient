@@ -47,13 +47,15 @@ public class TCPConnection {
     }
 
     public synchronized void sendString(String str){
-        try {
-            out.write(str+"\r\n");
-            out.flush();
-        } catch (IOException e) {
-            eventListener.onException(TCPConnection.this,e);
-            disconnect();
-        }
+
+                try {
+                    out.write(str+"\r\n");
+                    out.flush();
+                } catch (IOException e) {
+                    eventListener.onException(TCPConnection.this,e);
+                    disconnect();
+                }
+
     }
     public synchronized void disconnect(){
         //остонавливаем поток

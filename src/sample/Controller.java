@@ -1,12 +1,14 @@
 package sample;
 
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.HPos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -31,6 +33,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.BigInteger;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
@@ -138,32 +142,32 @@ public class Controller implements TCPConnectionListener{
 
                     //отправка
 
-                    //Task task = new Task<Void>() {
-                        //@Override
-                        //protected Void call() throws Exception {
+                    Task task = new Task<Void>() {
+                        @Override
+                        protected Void call() throws Exception {
 
 
 
                             BufferedImage bImage = SwingFXUtils.fromFXImage(imageView.getImage(), null);
                             ByteArrayOutputStream s = new ByteArrayOutputStream();
                             try {
-                                ImageIO.write(bImage, "png", s);
+                                ImageIO.write(bImage, "jpg", s);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
                             byte[] res = s.toByteArray();
+                            System.out.println(">>>>>"+res.length);
                             String str = new String(res);
 
 
                             String imageString = Base64.getEncoder().encodeToString(res);
                             String msg = Name + "\n" + " " + "</ImageBytes>" + imageString;
-                            System.out.println("> "+imageString);
                             sendImage(msg);
-                            //return null;
-                        //}
+                            return null;
+                        }
 
-                    //};
-                    //new Thread(task).start();
+                    };
+                    new Thread(task).start();
 
                 } catch (FileNotFoundException e) {
                     System.out.println(e);
@@ -254,7 +258,16 @@ public class Controller implements TCPConnectionListener{
 
     }
     private synchronized void sendImage(String str){
-        Connection.sendString(cypher.encrypt(str));
+        Task<Void> task = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                Connection.sendString(cypher.encrypt(str));
+                return null;
+            }
+        };
+        Thread thread = new Thread(task);
+        thread.start();
+
     }
 
     private synchronized void printMessage(String str){
@@ -321,86 +334,121 @@ public class Controller implements TCPConnectionListener{
         if(!finalStr.equals("")&&!finalStr.equals("null")&&!finalStr.contains("service")&&!finalStr.contains("TCP")) {
             Platform.runLater(() -> {
 
-
-                TextArea area = new TextArea();
-                area.setMaxWidth(520);
-                area.setMinWidth(520);
-                area.setWrapText(true);
-                area.setPrefHeight(100);
-
-
-                //------------------------------------
-
-                Label l = new Label(finalStr);
-                l.setLayoutY(400);
-                l.setLayoutX(1000);
-                l.setMaxWidth(500);
-                l.setWrapText(true);
-                MainPain.getChildren().add(l);
+                if(!finalStr.contains("http")) {
+                    TextArea area = new TextArea();
+                    area.setMaxWidth(520);
+                    area.setMinWidth(520);
+                    area.setWrapText(true);
+                    area.setPrefHeight(100);
 
 
+                    //------------------------------------
 
-                l.setStyle("-fx-background-color: gray;-fx-font-size:15;-fx-font-family: Arial");
-                l.heightProperty().addListener((obs , oldVal, newVal)->{
-                    //System.out.println("> "+newVal);
-                    area.setPrefHeight(newVal.doubleValue()+10);
-                    area.setMinHeight(newVal.doubleValue()+10);
-                    area.setMaxHeight(newVal.doubleValue()+10);
-                });
+                    Label l = new Label(finalStr);
+                    l.setLayoutY(400);
+                    l.setLayoutX(1000);
+                    l.setMaxWidth(500);
+                    l.setWrapText(true);
+                    MainPain.getChildren().add(l);
 
-                l.widthProperty().addListener((obs , oldVal, newVal)->{
-                    x=(newVal.doubleValue());
-                    //System.out.println("width = "+x);
-                    if(x<520) {
-                        area.setPrefWidth(newVal.doubleValue()+50);
-                        area.setMinWidth(newVal.doubleValue()+50);
-                        area.setMaxWidth(newVal.doubleValue()+50);
+
+                    l.setStyle("-fx-background-color: gray;-fx-font-size:15;-fx-font-family: Arial");
+                    l.heightProperty().addListener((obs, oldVal, newVal) -> {
+                        //System.out.println("> "+newVal);
+                        area.setPrefHeight(newVal.doubleValue() + 10);
+                        area.setMinHeight(newVal.doubleValue() + 10);
+                        area.setMaxHeight(newVal.doubleValue() + 10);
+                    });
+
+                    l.widthProperty().addListener((obs, oldVal, newVal) -> {
+                        x = (newVal.doubleValue());
+                        //System.out.println("width = "+x);
+                        if (x < 520) {
+                            area.setPrefWidth(newVal.doubleValue() + 50);
+                            area.setMinWidth(newVal.doubleValue() + 50);
+                            area.setMaxWidth(newVal.doubleValue() + 50);
+
+                        }
+                    });
+
+                    allMessage.heightProperty().addListener(
+                            (observable, oldValue, newValue) -> {
+                                ScrollBar.applyCss();
+                                ScrollBar.layout();
+                                ScrollBar.setVvalue(1.0d);
+                            }
+                    );
+
+
+                    int x = finalStr.indexOf(" ");
+                    //System.out.println("x = "+x);
+                    //System.out.println(finalStr.substring(0,x-1));
+                    String nameTemp = finalStr.substring(0, x - 1);
+                    if (nameTemp.equals(Name)) {
+                        area.setStyle("-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial");
+                        area.getStylesheets().add("sample/style/text-area-background.css");
+                        //System.out.println("width = "+x);
+                        GridPane.setHalignment(area, HPos.RIGHT);
+                    } else {
+
+                        area.setStyle("-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial;");
+
+                        area.getStylesheets().add("sample/style/text-area-background2.css");
 
                     }
-                });
+                    area.setEditable(false);
+                    area.setText(finalStr);
+                    area.applyCss();
+                    area.layout();
 
-                allMessage.heightProperty().addListener(
-                        (observable, oldValue, newValue) -> {
-                            ScrollBar.applyCss();
-                            ScrollBar.layout();
-                            ScrollBar.setVvalue( 1.0d );
+
+                    allMessage.add(area, 0, nMsg);
+                    allMessage.applyCss();
+                    //allMessage.layout();
+                    // ScrollBar.applyCss();
+                    //ScrollBar.layout();
+                    //ScrollBar.setVvalue(1.0d);
+                    //ScrollBar.setContent(allMessage);
+                    //ScrollBar.applyCss();
+                    //ScrollBar.layout();
+                    nMsg++;
+
+
+                    System.gc();
+                }else {
+                    Hyperlink hyperlink = new Hyperlink();
+                    hyperlink.setText(finalStr);
+                    hyperlink.setOnAction(event -> {
+                        try {
+                            System.out.println(">"+finalStr);
+                            Desktop.getDesktop().browse(new URL(finalStr.substring(finalStr.indexOf(" ")+1,finalStr.length())
+                            ).toURI());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (URISyntaxException e) {
+                            e.printStackTrace();
                         }
-                );
+                    });
 
+                    int x = finalStr.indexOf(" ");
+                    String nameTemp = finalStr.substring(0, x - 1);
+                    Pane pane = new Pane(hyperlink);
+                    pane.setStyle("-fx-background-color: WH");
 
-                int x=finalStr.indexOf(" ");
-                //System.out.println("x = "+x);
-                //System.out.println(finalStr.substring(0,x-1));
-                String nameTemp=finalStr.substring(0,x-1);
-                if(nameTemp.equals(Name)) {
-                    area.setStyle("-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial");
-                    area.getStylesheets().add("sample/style/text-area-background.css");
-                    //System.out.println("width = "+x);
-                    GridPane.setHalignment(area, HPos.RIGHT);
-                }else{
+                    if(nameTemp.equals(Name)){
+                        hyperlink.setStyle("-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial");
+                        hyperlink.getStylesheets().add("sample/style/text-area-background.css");
+                        GridPane.setHalignment(pane, HPos.RIGHT);
+                    }else {
+                        hyperlink.setStyle("-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial;");
+                        hyperlink.getStylesheets().add("sample/style/text-area-background2.css");
+                    }
+                    hyperlink.setMaxWidth(500);
 
-                    area.setStyle("-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial");
-                    area.getStylesheets().add("sample/style/text-area-background2.css");
+                    allMessage.add(pane, 0, nMsg);
+                    allMessage.applyCss();
 
                 }
-                area.setText(finalStr);
-                area.applyCss();
-                area.layout();
-
-
-                allMessage.add(area,0,nMsg);
-                allMessage.applyCss();
-                //allMessage.layout();
-               // ScrollBar.applyCss();
-                //ScrollBar.layout();
-                //ScrollBar.setVvalue(1.0d);
-                //ScrollBar.setContent(allMessage);
-                //ScrollBar.applyCss();
-                //ScrollBar.layout();
-                nMsg++;
-
-
-                System.gc();
             });
         }
 
@@ -416,7 +464,7 @@ public class Controller implements TCPConnectionListener{
     private synchronized void printImage(String str){
         Platform.runLater(() -> {
 
-                    String imageStr;
+            String imageStr;
                 int x = str.indexOf(">");
                 imageStr = str.substring(x + 1, str.length());
                  System.out.println(">! "+imageStr);
