@@ -102,6 +102,7 @@ public class Controller implements TCPConnectionListener{
     private boolean Second=false;//подключился вторым
 
     public void initialize() {
+        allMessage.setVgap(1); //vertical gap in pixels
         outMessage.setStyle("-fx-background-color:#4C5866;-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial");
         run();
         ScrollBar.getStylesheets().add("sample/style/scroolpane.css");
@@ -411,13 +412,16 @@ public class Controller implements TCPConnectionListener{
                     //ScrollBar.setContent(allMessage);
                     //ScrollBar.applyCss();
                     //ScrollBar.layout();
+
+
+
+
                     nMsg++;
-
-
                     System.gc();
                 }else {
                     Hyperlink hyperlink = new Hyperlink();
                     hyperlink.setText(finalStr);
+                    hyperlink.setMaxWidth(250);
                     hyperlink.setOnAction(event -> {
                         try {
                             System.out.println(">"+finalStr);
@@ -432,23 +436,35 @@ public class Controller implements TCPConnectionListener{
 
                     int x = finalStr.indexOf(" ");
                     String nameTemp = finalStr.substring(0, x - 1);
-                    Pane pane = new Pane(hyperlink);
-                    pane.setStyle("-fx-background-color: WH");
+                    Pane pane = new Pane();
+                    pane.getChildren().add(hyperlink);
+
+                    pane.setMaxWidth(300);
+                    pane.setMinHeight(25);
+                    pane.setPrefWidth(50);
 
                     if(nameTemp.equals(Name)){
                         hyperlink.setStyle("-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial");
-                        hyperlink.getStylesheets().add("sample/style/text-area-background.css");
+                        pane.setStyle("-fx-background-color: #2E3757;-fx-border-radius: 15 15 0 15;-fx-background-radius: 15 15 0 15");
                         GridPane.setHalignment(pane, HPos.RIGHT);
                     }else {
                         hyperlink.setStyle("-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial;");
-                        hyperlink.getStylesheets().add("sample/style/text-area-background2.css");
+                        pane.setStyle("-fx-background-color: #4B6C91;-fx-border-radius: 0 15 15 15;-fx-background-radius: 0 15 15 15;");
                     }
-                    hyperlink.setMaxWidth(500);
+                    hyperlink.setMaxWidth(250);
 
                     allMessage.add(pane, 0, nMsg);
-                    allMessage.applyCss();
+
+                    pane.applyCss();
+                    pane.layout();
+
+
+
+                    nMsg++;
+                    System.gc();
 
                 }
+                System.out.println(nMsg);
             });
         }
 
@@ -498,7 +514,7 @@ public class Controller implements TCPConnectionListener{
 
                             if (str.contains(Name)) {
                                 GridPane.setHalignment(group6, HPos.RIGHT);
-                                allMessage.setVgap(1); //vertical gap in pixels
+
                             }
                             if (!str.contains(Name)) {
                                 GridPane.setHalignment(group6, HPos.LEFT);
@@ -652,7 +668,6 @@ public class Controller implements TCPConnectionListener{
         }else {
             printMessage(str);
         }
-        nMsg++;
     }
 
     @Override

@@ -20,7 +20,7 @@ public class Main extends Application  {
 
 
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
-        primaryStage.setScene(new Scene(root, 750, 600));
+        primaryStage.setScene(new Scene(root, 740, 590));
         //primaryStage.setTitle("ENCCAT");
 
         //слушатель закрытия приложения
@@ -33,7 +33,7 @@ public class Main extends Application  {
         });
         primaryStage.getIcons().add(new Image("sample/style/En2.png"));
 
-        //primaryStage.setResizable(false);
+        primaryStage.setResizable(false);
         //primaryStage.initStyle(StageStyle.TRANSPARENT);
         primaryStage.show();
     }
