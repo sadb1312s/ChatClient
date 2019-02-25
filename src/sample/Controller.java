@@ -8,8 +8,8 @@ import javafx.fxml.FXML;
 import javafx.geometry.HPos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
@@ -40,6 +40,7 @@ import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 
 public class Controller implements TCPConnectionListener{
@@ -91,6 +92,7 @@ public class Controller implements TCPConnectionListener{
     Date date;
     DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
     boolean isConnect=false;
+    UUID uuid = UUID.randomUUID();
 
     //для шифрования
     private Cypher cypher = new Cypher();
@@ -225,7 +227,7 @@ public class Controller implements TCPConnectionListener{
     //ввод имени и снятие фокуса
     @FXML
     public void GetName(javafx.event.ActionEvent actionEvent) {
-        Name=nickName.getText();
+        Name=uuid.toString()+"<"+nickName.getText();
         if(!Name.equals("")&&isConnect){
             getNamePane.requestFocus();
             outMessage.setDisable(false);
@@ -273,9 +275,9 @@ public class Controller implements TCPConnectionListener{
 
     private synchronized void printMessage(String str){
 
-        //сервисные сообщения
         date = new Date();
-        String finalStr = str;
+        boolean myMessage=chekName(str);
+        String finalStr =delUUID(str);
 
         if(Cypher.needGenNewKey){
             //System.out.println(Cypher.needGenNewKey);
@@ -303,8 +305,6 @@ public class Controller implements TCPConnectionListener{
 
         if(finalStr.contains("service:public_key:")){
             if(!cypher.GenModIsGenerate&&!cypher.setOtherKeyB){
-
-
                 cypher.setGenMod(finalStr.replace("service:public_key:",""));
                 date = new Date();
                 Connection.sendString("service:public_key:"+ String.valueOf(cypher.publicKey));
@@ -334,7 +334,6 @@ public class Controller implements TCPConnectionListener{
         //сообщение для печати
         if(!finalStr.equals("")&&!finalStr.equals("null")&&!finalStr.contains("service")&&!finalStr.contains("TCP")) {
             Platform.runLater(() -> {
-
                 if(!finalStr.contains("http")) {
                     TextArea area = new TextArea();
                     area.setMaxWidth(520);
@@ -381,11 +380,8 @@ public class Controller implements TCPConnectionListener{
                     );
 
 
-                    int x = finalStr.indexOf(" ");
-                    //System.out.println("x = "+x);
-                    //System.out.println(finalStr.substring(0,x-1));
-                    String nameTemp = finalStr.substring(0, x - 1);
-                    if (nameTemp.equals(Name)) {
+
+                    if (myMessage) {
                         area.setStyle("-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial");
                         area.getStylesheets().add("sample/style/text-area-background.css");
                         //System.out.println("width = "+x);
@@ -402,20 +398,8 @@ public class Controller implements TCPConnectionListener{
                     area.applyCss();
                     area.layout();
 
-
                     allMessage.add(area, 0, nMsg);
                     allMessage.applyCss();
-                    //allMessage.layout();
-                    // ScrollBar.applyCss();
-                    //ScrollBar.layout();
-                    //ScrollBar.setVvalue(1.0d);
-                    //ScrollBar.setContent(allMessage);
-                    //ScrollBar.applyCss();
-                    //ScrollBar.layout();
-
-
-
-
                     nMsg++;
                     System.gc();
                 }else {
@@ -443,7 +427,7 @@ public class Controller implements TCPConnectionListener{
                     pane.setMinHeight(25);
                     pane.setPrefWidth(50);
 
-                    if(nameTemp.equals(Name)){
+                    if(myMessage){
                         hyperlink.setStyle("-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial");
                         pane.setStyle("-fx-background-color: #2E3757;-fx-border-radius: 15 15 0 15;-fx-background-radius: 15 15 0 15");
                         GridPane.setHalignment(pane, HPos.RIGHT);
@@ -480,10 +464,12 @@ public class Controller implements TCPConnectionListener{
     private synchronized void printImage(String str){
         Platform.runLater(() -> {
 
+            boolean myMessage=chekName(str);
             String imageStr;
-                int x = str.indexOf(">");
-                imageStr = str.substring(x + 1, str.length());
-                 System.out.println(">! "+imageStr);
+            int x = str.indexOf(">");
+            imageStr = str.substring(x + 1, str.length());
+
+            System.out.println(">! "+imageStr);
 
                 BufferedImage image = null;
                 byte[] imageByte = new byte[0];
@@ -512,16 +498,12 @@ public class Controller implements TCPConnectionListener{
 
                 allMessage.add(group6, 0, nMsg);
 
-                            if (str.contains(Name)) {
-                                GridPane.setHalignment(group6, HPos.RIGHT);
-
-                            }
-                            if (!str.contains(Name)) {
-                                GridPane.setHalignment(group6, HPos.LEFT);
-                            }
-
-
-
+                if (myMessage) {
+                    GridPane.setHalignment(group6, HPos.RIGHT);
+                }
+                else{
+                    GridPane.setHalignment(group6, HPos.LEFT);
+                }
 
                 allMessage.heightProperty().addListener(
                         (observable, oldValue, newValue) -> {
@@ -627,15 +609,7 @@ public class Controller implements TCPConnectionListener{
                     stage2.show();
 
                 });
-
-
                 nMsg++;
-
-
-
-
-
-
         });
     }
 
@@ -686,5 +660,26 @@ public class Controller implements TCPConnectionListener{
 
     public void getPort(ActionEvent actionEvent) {
         port=Integer.parseInt(Port.getText());
+    }
+
+    public boolean chekName(String str){
+        try {
+            if (str.substring(0, str.indexOf("<")).contains(uuid.toString())) {
+                return true;
+            } else {
+                return false;
+            }
+        }catch (Exception e){
+            return false;
+        }
+
+    }
+
+    public String delUUID(String str){
+        try {
+            return str.substring(str.indexOf("<")+1, str.length());
+        }catch (Exception e){
+            return str;
+        }
     }
 }
