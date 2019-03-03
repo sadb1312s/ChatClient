@@ -22,7 +22,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
@@ -81,8 +80,6 @@ public class Controller implements TCPConnectionListener{
 
     int nMsg=0;
     double x=0;
-    //переменные
-    boolean min=false;
     //сетевые переменные
     private static String ip ="gavnotest1488.ddns.net";
     private static int port=8199;
@@ -93,12 +90,13 @@ public class Controller implements TCPConnectionListener{
     DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
     boolean isConnect=false;
     UUID uuid = UUID.randomUUID();
+    int abonetnN=0;
+    int myNumber;
+    boolean cyhherCreate=false;
+
 
     //для шифрования
     private Cypher cypher = new Cypher();
-
-    private BigInteger generator=BigInteger.valueOf(3);//генератор
-    private BigInteger modul=BigInteger.valueOf(17);//модуль
 
     private boolean First=false;//подключился первым
     private boolean Second=false;//подключился вторым
@@ -200,7 +198,7 @@ public class Controller implements TCPConnectionListener{
         date = new Date();
 
         //тестовоя проверка
-        Check check = new Check(ip,port);
+        /*Check check = new Check(ip,port);
         new Thread(check).start();
         check.setOnSucceeded(event -> {
 
@@ -222,7 +220,16 @@ public class Controller implements TCPConnectionListener{
             //System.out.println("Connect="+connect);
             date = new Date();
             Status.setFill(Color.RED);
-        });
+        });*/
+        try {
+            Connection = new TCPConnection(this,ip,port);
+            connect=true;
+            isConnect=true;
+            nickName.setDisable(false);
+            //outMessage.setDisable(false);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     //ввод имени и снятие фокуса
     @FXML
@@ -279,7 +286,7 @@ public class Controller implements TCPConnectionListener{
         boolean myMessage=chekName(str);
         String finalStr =delUUID(str);
 
-        if(Cypher.needGenNewKey){
+        if(Cypher.needGenNewKey&&abonetnN<2){
             //System.out.println(Cypher.needGenNewKey);
             cypher = new Cypher();
             Cypher.needGenNewKey=true;
@@ -290,7 +297,7 @@ public class Controller implements TCPConnectionListener{
             Cypher.needGenNewKey=false;
         }
 
-        if(!First&&!Second) {
+        if(!First&&!Second&&abonetnN<2) {
             if (finalStr.equals("service:you first")) {
                 First = true;
                 Second = false;
@@ -303,7 +310,7 @@ public class Controller implements TCPConnectionListener{
             }
         }
 
-        if(finalStr.contains("service:public_key:")){
+        if(finalStr.contains("service:public_key:")&&abonetnN<2){
             if(!cypher.GenModIsGenerate&&!cypher.setOtherKeyB){
                 cypher.setGenMod(finalStr.replace("service:public_key:",""));
                 date = new Date();
@@ -448,7 +455,7 @@ public class Controller implements TCPConnectionListener{
                     System.gc();
 
                 }
-                System.out.println(nMsg);
+                //System.out.println(nMsg);
             });
         }
 
@@ -628,19 +635,109 @@ public class Controller implements TCPConnectionListener{
 
     @Override
     public void onRecieveReady(TCPConnection tcpConnection, String str) {
-        //System.out.println(str);
+
         str=str.trim();
         //System.out.println("! "+str);
 
-        if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")&&!str.contains("service:")) {
+        if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")&&!str.contains("service:")&&!str
+                .contains("serviceMU")) {
             //System.out.println("Нужно расшифровать "+str);
             str = cypher.decrypt(str);
         }
 
-        if(str.contains("</ImageBytes>")){
+        if(str.contains("</ImageBytes>")&&!str.contains("service:")&&!str
+                .contains("serviceMU")){
             printImage(str);
-        }else {
+        }
+        if(!str.contains("</ImageBytes>")&&!str.contains("service:")&&!str
+                .contains("serviceMU")){
             printMessage(str);
+        }
+
+
+        if(str.contains("serviceMU:")&&connect){
+            System.out.println("connect? = "+connect);
+           myNumber= Integer.parseInt(str.substring(str.indexOf(":")+1,str.indexOf(":")+2));
+           abonetnN= Integer.parseInt(str.substring(str.indexOf(">")+1,str.indexOf(">")+2));
+            System.out.println("number = "+myNumber);
+            System.out.println("abonetnN = "+abonetnN);
+           if(!cyhherCreate) {
+               cypher = new Cypher();
+               cyhherCreate=true;
+
+               if(myNumber==1){
+                   System.out.println("gen gen gen gen gen");
+                   cypher.genGenMod();
+                   Connection.sendString("serviceMUGenMod:>" + cypher.gen + "<" + cypher.modul);
+                   try {
+                       Thread.sleep(100);
+                   } catch (InterruptedException e) {
+                       e.printStackTrace();
+                   }
+                   int sendTo;
+                   if(myNumber==abonetnN){
+                       sendTo=1;
+                   }else{
+                        sendTo=myNumber+1;
+                   }
+                   int chain=0;
+                   chain+=myNumber;
+                   Connection.sendString("serviceMUP:>"+myNumber+"!"+sendTo+"<"+chain+"^"+cypher.genPublicKey());
+               }
+           }
+
+
+
+        }
+        if(str.contains("serviceMUGenMod:")&&connect){
+            System.out.println("gen and mod aaaa");
+            if(!cypher.GenModIsGenerate) {
+                cypher.gen= new BigInteger(str.substring(str.indexOf(">") + 1, str.indexOf("<")));
+                cypher.modul=new BigInteger(str.substring(str.indexOf("<") + 1, str.length()));
+                cypher.GenModIsGenerate = true;
+
+
+                int sendTo;
+                if(myNumber==abonetnN){
+                    sendTo=1;
+                }else{
+                    sendTo=myNumber+1;
+                }
+                int chain=0;
+                chain+=myNumber;
+                System.out.println(">"+chain);
+                System.out.println(">"+sendTo);
+                Connection.sendString("serviceMUP:>"+myNumber+"!"+sendTo+"<"+chain+"^"+cypher.genPublicKey());
+
+            }
+        }
+        if(str.contains("serviceMUP:>")){
+            System.out.println(str);
+            int chainT=0;
+            for(int i=1;i<=abonetnN;i++)
+                chainT+=i;
+            System.out.println(chainT);
+
+            if(str.substring(str.indexOf("!")+1,str.indexOf("<")).equals(""+myNumber)){
+                System.out.println("ME");
+                int messageChain= Integer.parseInt(str.substring(str.indexOf("<")+1,str.indexOf("^")));
+                if(messageChain==(chainT-myNumber)){
+                    System.out.println("key key");
+                    cypher.setOtherKey(str.substring(str.indexOf("^")+1,str.length()));
+                }else{
+
+                    int sendTo;
+                    if(myNumber==abonetnN){
+                        sendTo=1;
+                    }else{
+                        sendTo=myNumber+1;
+                    }
+
+                    messageChain+=myNumber;
+                    Connection.sendString("serviceMUP:>"+myNumber+"!"+sendTo+"<"+messageChain+"^"+cypher.getPassPart
+                            (str.substring(str.indexOf("^")+1,str.length())));
+                }
+            }
         }
     }
 
