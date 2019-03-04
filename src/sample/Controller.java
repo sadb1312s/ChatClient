@@ -78,6 +78,7 @@ public class Controller implements TCPConnectionListener{
     @FXML
     private AnchorPane DropPane;
 
+    //
     int nMsg=0;
     double x=0;
     //сетевые переменные
