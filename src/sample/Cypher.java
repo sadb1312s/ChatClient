@@ -28,7 +28,6 @@ public class Cypher {
     }
 
     public String genGenMod(){
-        //System.out.println("КЛАСС");
         Random random = new Random();
         gen=new BigInteger(keysSize,random);
         modul=new BigInteger(keysSize,random);

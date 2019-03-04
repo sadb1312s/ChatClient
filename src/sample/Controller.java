@@ -637,7 +637,7 @@ public class Controller implements TCPConnectionListener{
     public void onRecieveReady(TCPConnection tcpConnection, String str) {
 
         str=str.trim();
-        //System.out.println("! "+str);
+        System.out.println("! "+str);
 
         if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")&&!str.contains("service:")&&!str
                 .contains("serviceMU")) {
@@ -655,12 +655,24 @@ public class Controller implements TCPConnectionListener{
         }
 
 
+        if(abonetnN>3&&str.contains("client connected TCP Connection:")){
+            //System.out.println("подключился 4");
+            //cyhherCreate=false;
+        }
+
         if(str.contains("serviceMU:")&&connect){
             System.out.println("connect? = "+connect);
            myNumber= Integer.parseInt(str.substring(str.indexOf(":")+1,str.indexOf(":")+2));
-           abonetnN= Integer.parseInt(str.substring(str.indexOf(">")+1,str.indexOf(">")+2));
+           int abonetnNt= Integer.parseInt(str.substring(str.indexOf(">")+1,str.indexOf(">")+2));
             System.out.println("number = "+myNumber);
-            System.out.println("abonetnN = "+abonetnN);
+            System.out.println("abonetnN = "+abonetnNt);
+
+            if(abonetnNt>abonetnN){
+                abonetnN=abonetnNt;
+                cyhherCreate=false;
+                System.out.println("------------------------------------");
+            }
+
            if(!cyhherCreate) {
                cypher = new Cypher();
                cyhherCreate=true;
