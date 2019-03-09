@@ -4,7 +4,13 @@ import javafx.concurrent.Task;
 
 import java.util.TimerTask;
 
+import static sample.Controller.myNumber;
+
 public class Timer extends Task {
+
+    boolean stop=false;
+    java.util.Timer timer = new java.util.Timer();
+
     @Override
     protected Object call() throws Exception {
         timer();
@@ -14,13 +20,30 @@ public class Timer extends Task {
     private int timer(){
         TimerTask task2 = new TimerTask() {
             public void run() {
-                //System.out.println("Knock-Knock!");
-                Cypher.needGenNewKey=true;
-                Controller.Connection.sendString("NEW KEY PLEASE");
-                cancel(); }};
+                Thread t = Thread.currentThread();
 
-        java.util.Timer timer = new java.util.Timer();
+                if(!stop) {
+                    System.out.println(t.getName() + " Knock-Knock!");
+                    Cypher.needGenNewKey = true;
+                    if(myNumber==1)
+                        Controller.Connection.sendString("NEW KEY PLEASE");
+                    cancel();
+
+
+                }
+                if(stop){
+                    System.out.println("TIMER STOP");
+                    timer.cancel();
+                    timer.purge();
+                }
+
+            }};
+
+
+
         timer.schedule(task2, 10000);
+
+
         return 0;
     }
 }

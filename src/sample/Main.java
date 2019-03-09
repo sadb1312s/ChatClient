@@ -20,7 +20,7 @@ public class Main extends Application  {
 
 
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
-        primaryStage.setScene(new Scene(root, 740, 590));
+        primaryStage.setScene(new Scene(root, 750, 600));
         //primaryStage.setTitle("ENCCAT");
 
         //слушатель закрытия приложения

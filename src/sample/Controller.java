@@ -92,8 +92,9 @@ public class Controller implements TCPConnectionListener{
     boolean isConnect=false;
     UUID uuid = UUID.randomUUID();
     int abonetnN=0;
-    int myNumber;
+    static int myNumber;
     boolean cyhherCreate=false;
+    Timer timer;
 
 
     //для шифрования
@@ -591,6 +592,10 @@ public class Controller implements TCPConnectionListener{
         str=str.trim();
         //System.out.println("! "+str);
 
+        if(str.contains("client disconnected TCP Connection:")){
+            abonetnN--;
+        }
+
         if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")&&!str.contains("service:")&&!str
                 .contains("serviceMU")&&!str.equals("NEW KEY PLEASE")) {
             //System.out.println("Нужно расшифровать "+str);
@@ -615,115 +620,93 @@ public class Controller implements TCPConnectionListener{
             keyWorkTwoAbonent(str);
         }
 
-        /*if(!First&&!Second&&abonetnN<=2) {
+        if(!First&&!Second&&abonetnN<=2) {
             System.out.println("2");
             if (str.equals("service:you first")) {
-                System.out.println("2.1");
+                //System.out.println("2.1");
                 First = true;
                 Second = false;
             }
             if (str.equals("service:you second")) {
-                System.out.println("2.2");
+                //System.out.println("2.2");
                 First = false;
                 Second = true;
                 String genmod = cypher.genGenMod();
                 Connection.sendString("service:public_key:" + genmod);
             }
-        }*/
+        }
 
 
 
-        if(str.equals("NEW KEY PLEASE")){
+        if(str.equals("NEW KEY PLEASE")&&abonetnN<=2){
             outMessage.setDisable(true);
-            if(Cypher.needGenNewKey&&abonetnN>2) {
-
-                System.out.println("NEW KEWEQWEWQEWQ");
-                Cypher.needGenNewKey=false;
-                cypher = new Cypher();
-
-                if (myNumber == 1&&abonetnN>2) {
-                    System.out.println("gen new key");
-                    cypher.genGenMod();
-                    Connection.sendString("serviceMUGenMod:>" + cypher.gen + "<" + cypher.modul);
 
 
-                    Connection.sendString("serviceMUP:>" + myNumber + "!" + (myNumber+1) + "<" + myNumber + "^" + cypher
-                            .genPublicKey());
-
-
-                }
-
-
-            }
-           /* if(Cypher.needGenNewKey&&abonetnN<=2){
+           if(Cypher.needGenNewKey&&abonetnN<=2){
                 //Cypher.needGenNewKey=false;
                 cypher = new Cypher();
-                System.out.println("222");
+                //System.out.println("222");
 
                 if(Second) {
                     String genmod = cypher.genGenMod();
-                    System.out.println("222.1");
+                    //System.out.println("222.1");
                     Connection.sendString("service:public_key:" + genmod);
                 }
 
                 Cypher.needGenNewKey=false;
-            }*/
+            }
 
+        }
+
+        if(str.equals("NEW KEY PLEASE")&&abonetnN>2) {
+            //if (Cypher.needGenNewKey && abonetnN > 2) {
+                System.out.println("NEW KEWEQWEWQEWQ");
+                if(timer!=null){
+                    timer.stop=true;
+                    timer.cancel();
+                    System.out.println("timer stop "+timer.stop);
+                }
+                //Cypher.needGenNewKey = false;
+                cyhherCreate = false;
+                keyWork(str);
+            //}
         }
     }
 
     public void keyWork(String str){
         //System.out.println("!! "+str);
         if (str.contains("serviceMU:")){
-            System.out.println("1");
+            //System.out.println("1");
             //System.out.println("connect? = " + connect);
             myNumber = Integer.parseInt(str.substring(str.indexOf(":") + 1, str.indexOf(":") + 2));
             int abonetnNt = Integer.parseInt(str.substring(str.indexOf(">") + 1, str.indexOf(">") + 2));
-            //System.out.println("number = " + myNumber);
-            //System.out.println("abonetnN = " + abonetnNt);
-            if (abonetnNt > abonetnN) {
+
+            if (abonetnNt != abonetnN) {
                 abonetnN = abonetnNt;
                 cyhherCreate = false;
-                System.out.println("------------------------------------");
-            }
-        }
-        if (str.contains("serviceMU:") && connect&&!cyhherCreate) {
+                //System.out.println("Начинаем по новой");
 
-            //System.out.println(abonetnNt+" "+abonetnN);
-            if (!cyhherCreate) {
-                cypher = new Cypher();
-                cyhherCreate = true;
-
-                if (myNumber == 1) {
-                    //System.out.println("gen gen gen gen gen");
-                    cypher.genGenMod();
-                    Connection.sendString("serviceMUGenMod:>" + cypher.gen + "<" + cypher.modul);
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    int sendTo;
-                    if (myNumber == abonetnN) {
-                        sendTo = 1;
-                    } else {
-                        sendTo = myNumber + 1;
-                    }
-                    int chain = 0;
-                    chain += myNumber;
-                    Connection.sendString("serviceMUP:>" + myNumber + "!" + sendTo + "<" + chain + "^" + cypher.genPublicKey());
+                if(timer!=null){
+                    timer.stop=true;
+                    timer.cancel();
+                    //System.out.println("timer stop "+timer.stop);
                 }
             }
+           // System.out.println("number = " + myNumber);
+           // System.out.println("abonetnN = " + abonetnNt);
 
 
         }
-        if (str.contains("serviceMUGenMod:") && connect) {
-            System.out.println("gen and mod aaaa");
-            if (!cypher.GenModIsGenerate) {
-                cypher.gen = new BigInteger(str.substring(str.indexOf(">") + 1, str.indexOf("<")));
-                cypher.modul = new BigInteger(str.substring(str.indexOf("<") + 1, str.length()));
-                cypher.GenModIsGenerate = true;
+        if(!cyhherCreate&& connect){
+            //System.out.println("новый обьект");
+            cypher = new Cypher();
+            cyhherCreate = true;
 
+
+            if (myNumber == 1) {
+                //System.out.println(myNumber+" gen gen gen gen gen");
+                cypher.genGenMod();
+                Connection.sendString("serviceMUGenMod:>" + cypher.gen + "<" + cypher.modul);
 
                 int sendTo;
                 if (myNumber == abonetnN) {
@@ -733,29 +716,17 @@ public class Controller implements TCPConnectionListener{
                 }
                 int chain = 0;
                 chain += myNumber;
-                //System.out.println(">" + chain);
-                //System.out.println(">" + sendTo);
                 Connection.sendString("serviceMUP:>" + myNumber + "!" + sendTo + "<" + chain + "^" + cypher.genPublicKey());
-
             }
         }
-        if (str.contains("serviceMUP:>")) {
-            //System.out.println(str);
-            int chainT = 0;
-            for (int i = 1; i <= abonetnN; i++)
-                chainT += i;
-            //System.out.println(chainT);
+        if (str.contains("serviceMUGenMod:") && connect) {
 
-            if (str.substring(str.indexOf("!") + 1, str.indexOf("<")).equals("" + myNumber)) {
-                //System.out.println("ME");
-                int messageChain = Integer.parseInt(str.substring(str.indexOf("<") + 1, str.indexOf("^")));
-                if (messageChain == (chainT - myNumber)) {
-                    System.out.println("key key");
-                    cypher.setOtherKey(str.substring(str.indexOf("^") + 1, str.length()));
-                    outMessage.setDisable(false);
-                    Timer timer = new Timer();
-                    new Thread(timer).start();
-                } else {
+                if (!cypher.GenModIsGenerate) {
+                    //System.out.println("приняли генератор и модуль");
+                    cypher.gen = new BigInteger(str.substring(str.indexOf(">") + 1, str.indexOf("<")));
+                    cypher.modul = new BigInteger(str.substring(str.indexOf("<") + 1, str.length()));
+                    cypher.GenModIsGenerate = true;
+                    //System.out.println(cypher.gen+" "+cypher.modul);
 
                     int sendTo;
                     if (myNumber == abonetnN) {
@@ -763,34 +734,69 @@ public class Controller implements TCPConnectionListener{
                     } else {
                         sendTo = myNumber + 1;
                     }
+                    int chain = 0;
+                    chain += myNumber;
+                    //System.out.println(">" + chain);
+                    //System.out.println(">" + sendTo);
+                    Connection.sendString("serviceMUP:>" + myNumber + "!" + sendTo + "<" + chain + "^" + cypher.genPublicKey());
 
-                    messageChain += myNumber;
-                    Connection.sendString("serviceMUP:>" + myNumber + "!" + sendTo + "<" + messageChain + "^" + cypher.getPassPart
-                            (str.substring(str.indexOf("^") + 1, str.length())));
                 }
             }
+        if (str.contains("serviceMUP:>")) {
+                //System.out.println(str);
 
-        }
+                int chainT = 0;
+                for (int i = 1; i <= abonetnN; i++)
+                    chainT += i;
+                //System.out.println(chainT);
+
+                if (str.substring(str.indexOf("!") + 1, str.indexOf("<")).equals("" + myNumber)) {
+                    //System.out.println("приняли часть ключа");
+                    int messageChain = Integer.parseInt(str.substring(str.indexOf("<") + 1, str.indexOf("^")));
+                    if (messageChain == (chainT - myNumber)) {
+                        //System.out.println("конец чепочки");
+                        cypher.setOtherKey(str.substring(str.indexOf("^") + 1, str.length()));
+                        outMessage.setDisable(false);
+                        timer = new Timer();
+                        new Thread(timer).start();
+                    } else {
+
+                        int sendTo;
+                        if (myNumber == abonetnN) {
+                            sendTo = 1;
+                        } else {
+                            sendTo = myNumber + 1;
+                        }
+
+                        messageChain += myNumber;
+                        Connection.sendString("serviceMUP:>" + myNumber + "!" + sendTo + "<" + messageChain + "^" + cypher.getPassPart
+                                (str.substring(str.indexOf("^") + 1, str.length())));
+                    }
+                }
+
+            }
+
+
     }
 
     public void keyWorkTwoAbonent(String str){
         if(str.contains("service:public_key:")&&abonetnN<=2){
-            System.out.println(str);
-            System.out.println("3");
+            //System.out.println(str);
+            //System.out.println("3");
             if(!cypher.GenModIsGenerate&&!cypher.setOtherKeyB){
-                System.out.println("3.1");
+                //System.out.println("3.1");
                 cypher.setGenMod(str.replace("service:public_key:",""));
                 date = new Date();
                 Connection.sendString("service:public_key:"+ String.valueOf(cypher.publicKey));
                 if(!Name.equals(""))
                     Platform.runLater( () -> outMessage.setDisable(false) );
                 isConnect=true;
-                Timer timer = new Timer();
+                timer = new Timer();
                 new Thread(timer).start();
 
             }
             if(cypher.GenModIsGenerate&&!cypher.setOtherKeyB&&!str.contains(String.valueOf(cypher.publicKey))){
-                System.out.println("3.2");
+                //System.out.println("3.2");
                 cypher.setOtherKey(str.replace("service:public_key:",""));
 
                 if(!Name.equals(""))
