@@ -132,8 +132,6 @@ public class Controller implements TCPConnectionListener{
             List<File> files = db.getFiles();
 
 
-
-
             for(File object:files) {
                 System.out.println(object.getName());
                 try {
@@ -254,18 +252,18 @@ public class Controller implements TCPConnectionListener{
             return;
         }
         String msg=Name+":"+" "+msg2;
-            //spring security
-            //шифрование
-            String cipherText = cypher.encrypt(msg);
-            //System.out.println("шифрование " + cipherText);
-            //дешифрование
-            //System.out.println("дешифрование "+decrypt(cipherText));
+        //spring security
+        //шифрование
+        String cipherText = cypher.encrypt(msg);
+        //System.out.println("шифрование " + cipherText);
+        //дешифрование
+        //System.out.println("дешифрование "+decrypt(cipherText));
 
-            if (msg.trim().length() > 0) {
-                //System.out.println("Отправка");
-                outMessage.clear();
-                Connection.sendString(cipherText);
-            }
+        if (msg.trim().length() > 0) {
+            //System.out.println("Отправка");
+            outMessage.clear();
+            Connection.sendString(cipherText);
+        }
 
     }
     private synchronized void sendImage(String str){
@@ -283,60 +281,10 @@ public class Controller implements TCPConnectionListener{
 
     private synchronized void printMessage(String str){
 
+        System.out.println(">>>>"+str);
         date = new Date();
         boolean myMessage=chekName(str);
         String finalStr =delUUID(str);
-
-        if(Cypher.needGenNewKey&&abonetnN<2){
-            //System.out.println(Cypher.needGenNewKey);
-            cypher = new Cypher();
-            Cypher.needGenNewKey=true;
-            if(Second){
-                String genmod = cypher.genGenMod();
-                Connection.sendString("service:public_key:" + genmod);
-            }
-            Cypher.needGenNewKey=false;
-        }
-
-        if(!First&&!Second&&abonetnN<2) {
-            if (finalStr.equals("service:you first")) {
-                First = true;
-                Second = false;
-            }
-            if (finalStr.equals("service:you second")) {
-                First = false;
-                Second = true;
-                String genmod = cypher.genGenMod();
-                Connection.sendString("service:public_key:" + genmod);
-            }
-        }
-
-        if(finalStr.contains("service:public_key:")&&abonetnN<2){
-            if(!cypher.GenModIsGenerate&&!cypher.setOtherKeyB){
-                cypher.setGenMod(finalStr.replace("service:public_key:",""));
-                date = new Date();
-                Connection.sendString("service:public_key:"+ String.valueOf(cypher.publicKey));
-                if(!Name.equals(""))
-                    Platform.runLater( () -> outMessage.setDisable(false) );
-                isConnect=true;
-                Timer timer = new Timer();
-                new Thread(timer).start();
-
-            }
-            if(cypher.GenModIsGenerate&&!cypher.setOtherKeyB&&!finalStr.contains(String.valueOf(cypher.publicKey))){
-
-                cypher.setOtherKey(finalStr.replace("service:public_key:",""));
-
-                if(!Name.equals(""))
-                    Platform.runLater( () -> outMessage.setDisable(false) );
-                isConnect=true;
-
-                Timer timer = new Timer();
-                new Thread(timer).start();
-
-
-            }
-        }
 
 
         //сообщение для печати
@@ -408,6 +356,8 @@ public class Controller implements TCPConnectionListener{
 
                     allMessage.add(area, 0, nMsg);
                     allMessage.applyCss();
+                    //l.setText("");q
+
                     nMsg++;
                     System.gc();
                 }else {
@@ -452,6 +402,7 @@ public class Controller implements TCPConnectionListener{
 
 
 
+
                     nMsg++;
                     System.gc();
 
@@ -479,145 +430,145 @@ public class Controller implements TCPConnectionListener{
 
             System.out.println(">! "+imageStr);
 
-                BufferedImage image = null;
-                byte[] imageByte = new byte[0];
-                try {
-                    //BASE64Decoder decoder = new BASE64Decoder();
-                    //imageByte = decoder.decodeBuffer(imageStr);
+            BufferedImage image = null;
+            byte[] imageByte = new byte[0];
+            try {
+                //BASE64Decoder decoder = new BASE64Decoder();
+                //imageByte = decoder.decodeBuffer(imageStr);
 
-                    imageByte = Base64.getDecoder().decode(imageStr);
+                imageByte = Base64.getDecoder().decode(imageStr);
 
-                    ByteArrayInputStream bis = new ByteArrayInputStream(imageByte);
-                    image = ImageIO.read(bis);
-                    bis.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                ByteArrayInputStream bis = new ByteArrayInputStream(imageByte);
+                image = ImageIO.read(bis);
+                bis.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
-                Image image2 = SwingFXUtils.toFXImage(image, null);
+            Image image2 = SwingFXUtils.toFXImage(image, null);
 
-                Group group6 = new Group();
-                ImageView imageView4 = new ImageView();
-                imageView4.setImage(image2);
-                imageView4.setFitHeight(200);
-                imageView4.setFitWidth(350);
-                group6.getChildren().add(imageView4);
-
-
-                allMessage.add(group6, 0, nMsg);
-
-                if (myMessage) {
-                    GridPane.setHalignment(group6, HPos.RIGHT);
-                }
-                else{
-                    GridPane.setHalignment(group6, HPos.LEFT);
-                }
-
-                allMessage.heightProperty().addListener(
-                        (observable, oldValue, newValue) -> {
-                            ScrollBar.applyCss();
-                            ScrollBar.layout();
-                            ScrollBar.setVvalue(1.0d);
-                        });
-
-                imageView4.setOnMousePressed(event -> {
-                    Stage stage2 = new Stage();
-                    Group group2 = new Group();
-                    Scene scene2 = new Scene(group2);
-
-                    //stage2.initOwner(stage);
-                    stage2.initStyle(StageStyle.TRANSPARENT);
-                    stage2.setMaximized(true);
-
-                    StackPane pane2 = new StackPane();
-                    pane2.setStyle("-fx-background-color: BLACK");
-                    pane2.setOpacity(0.9);
-
-                    Button button2 = new Button("close");
-
-                    ImageView imageView2 = new ImageView();
+            Group group6 = new Group();
+            ImageView imageView4 = new ImageView();
+            imageView4.setImage(image2);
+            imageView4.setFitHeight(200);
+            imageView4.setFitWidth(350);
+            group6.getChildren().add(imageView4);
 
 
-                    group2.getChildren().addAll(pane2, imageView2, button2);
-                    scene2.setFill(null);
-                    stage2.setScene(scene2);
+            allMessage.add(group6, 0, nMsg);
 
+            if (myMessage) {
+                GridPane.setHalignment(group6, HPos.RIGHT);
+            }
+            else{
+                GridPane.setHalignment(group6, HPos.LEFT);
+            }
 
-                    button2.setOnAction(event2 -> {
-                        stage2.hide();
+            allMessage.heightProperty().addListener(
+                    (observable, oldValue, newValue) -> {
+                        ScrollBar.applyCss();
+                        ScrollBar.layout();
+                        ScrollBar.setVvalue(1.0d);
                     });
 
-                    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            imageView4.setOnMousePressed(event -> {
+                Stage stage2 = new Stage();
+                Group group2 = new Group();
+                Scene scene2 = new Scene(group2);
 
-                    double w = screenSize.getWidth();
-                    double h = screenSize.getHeight();
+                //stage2.initOwner(stage);
+                stage2.initStyle(StageStyle.TRANSPARENT);
+                stage2.setMaximized(true);
 
-                    double imgH = imageView4.getImage().getHeight();
-                    double imgW = imageView4.getImage().getWidth();
+                StackPane pane2 = new StackPane();
+                pane2.setStyle("-fx-background-color: BLACK");
+                pane2.setOpacity(0.9);
+
+                Button button2 = new Button("close");
+
+                ImageView imageView2 = new ImageView();
 
 
-                    pane2.setPrefSize(w, h);
-                    imageView2.setFitHeight(h - 100);
-                    imageView2.setFitWidth(w - 100);
+                group2.getChildren().addAll(pane2, imageView2, button2);
+                scene2.setFill(null);
+                stage2.setScene(scene2);
 
-                    imageView2.setImage(image2);
 
-                    scene2.setOnScroll(event5 -> {
-                        double zoom;
-                        if (event5.getDeltaY() > 0.0) {
+                button2.setOnAction(event2 -> {
+                    stage2.hide();
+                });
 
-                            zoom = 1.5;
-                        } else {
-                            zoom = 1 / 1.5;
-                        }
+                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
-                        imageView2.setScaleX(imageView2.getScaleX() * zoom);
-                        imageView2.setScaleY(imageView2.getScaleY() * zoom);
+                double w = screenSize.getWidth();
+                double h = screenSize.getHeight();
 
-                    });
+                double imgH = imageView4.getImage().getHeight();
+                double imgW = imageView4.getImage().getWidth();
 
-                    if ((imgH + 100) > h && (imgW + 100) > w) {
-                        imageView2.setFitHeight(h - 100);
-                        imageView2.setFitWidth(w - 100);
-                        imageView2.setX(50);
-                        imageView2.setY(50);
+
+                pane2.setPrefSize(w, h);
+                imageView2.setFitHeight(h - 100);
+                imageView2.setFitWidth(w - 100);
+
+                imageView2.setImage(image2);
+
+                scene2.setOnScroll(event5 -> {
+                    double zoom;
+                    if (event5.getDeltaY() > 0.0) {
+
+                        zoom = 1.5;
+                    } else {
+                        zoom = 1 / 1.5;
                     }
-                    if ((imgH + 100) < h && (imgW + 100) < w) {
-                        imageView2.setFitHeight(imgH);
-                        imageView2.setFitWidth(imgW);
-                        imageView2.setX(((w) - imgW) / 2);
-                        imageView2.setY(((h) - imgH) / 2);
-                    }
-                    //перемещение
-                    double[] mouseX = new double[2];
-                    double[] mouseY = new double[2];
 
-                    //перемещение изображений
-                    scene2.setOnMousePressed(event7 -> {
-                        mouseX[1] = event7.getX();
-                        mouseY[1] = event7.getY();
-                        //System.out.println("CLICK"+mouseX[1]+" "+mouseY[1]);
-                    });
-
-                    scene2.setOnMouseDragged(event6 -> {
-                        //System.out.println("Move "+event6.getX()+" "+event6.getY());
-
-                        mouseX[0] = mouseX[1];
-                        mouseX[1] = event6.getX();
-
-                        mouseY[0] = mouseY[1];
-                        mouseY[1] = event6.getY();
-
-                        double finalX = mouseX[1] - mouseX[0];
-                        double finalY = mouseY[1] - mouseY[0];
-                        imageView2.setX(imageView2.getX() + finalX);
-                        imageView2.setY(imageView2.getY() + finalY);
-
-                    });
-                    stage2.show();
+                    imageView2.setScaleX(imageView2.getScaleX() * zoom);
+                    imageView2.setScaleY(imageView2.getScaleY() * zoom);
 
                 });
-                nMsg++;
+
+                if ((imgH + 100) > h && (imgW + 100) > w) {
+                    imageView2.setFitHeight(h - 100);
+                    imageView2.setFitWidth(w - 100);
+                    imageView2.setX(50);
+                    imageView2.setY(50);
+                }
+                if ((imgH + 100) < h && (imgW + 100) < w) {
+                    imageView2.setFitHeight(imgH);
+                    imageView2.setFitWidth(imgW);
+                    imageView2.setX(((w) - imgW) / 2);
+                    imageView2.setY(((h) - imgH) / 2);
+                }
+                //перемещение
+                double[] mouseX = new double[2];
+                double[] mouseY = new double[2];
+
+                //перемещение изображений
+                scene2.setOnMousePressed(event7 -> {
+                    mouseX[1] = event7.getX();
+                    mouseY[1] = event7.getY();
+                    //System.out.println("CLICK"+mouseX[1]+" "+mouseY[1]);
+                });
+
+                scene2.setOnMouseDragged(event6 -> {
+                    //System.out.println("Move "+event6.getX()+" "+event6.getY());
+
+                    mouseX[0] = mouseX[1];
+                    mouseX[1] = event6.getX();
+
+                    mouseY[0] = mouseY[1];
+                    mouseY[1] = event6.getY();
+
+                    double finalX = mouseX[1] - mouseX[0];
+                    double finalY = mouseY[1] - mouseY[0];
+                    imageView2.setX(imageView2.getX() + finalX);
+                    imageView2.setY(imageView2.getY() + finalY);
+
+                });
+                stage2.show();
+
+            });
+            nMsg++;
         });
     }
 
@@ -638,10 +589,10 @@ public class Controller implements TCPConnectionListener{
     public void onRecieveReady(TCPConnection tcpConnection, String str) {
 
         str=str.trim();
-        System.out.println("! "+str);
+        //System.out.println("! "+str);
 
         if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")&&!str.contains("service:")&&!str
-                .contains("serviceMU")) {
+                .contains("serviceMU")&&!str.equals("NEW KEY PLEASE")) {
             //System.out.println("Нужно расшифровать "+str);
             str = cypher.decrypt(str);
         }
@@ -651,105 +602,205 @@ public class Controller implements TCPConnectionListener{
             printImage(str);
         }
         if(!str.contains("</ImageBytes>")&&!str.contains("service:")&&!str
-                .contains("serviceMU")){
+                .contains("serviceMU")&&!str.equals("NEW KEY PLEASE")){
             printMessage(str);
         }
 
 
-        if(abonetnN>3&&str.contains("client connected TCP Connection:")){
-            //System.out.println("подключился 4");
-            //cyhherCreate=false;
+        if(str.contains("serviceMU")) {
+            keyWork(str);
         }
 
-        if(str.contains("serviceMU:")&&connect){
-            System.out.println("connect? = "+connect);
-           myNumber= Integer.parseInt(str.substring(str.indexOf(":")+1,str.indexOf(":")+2));
-           int abonetnNt= Integer.parseInt(str.substring(str.indexOf(">")+1,str.indexOf(">")+2));
-            System.out.println("number = "+myNumber);
-            System.out.println("abonetnN = "+abonetnNt);
+        if(str.contains("service:public_key:")){
+            keyWorkTwoAbonent(str);
+        }
 
-            if(abonetnNt>abonetnN){
-                abonetnN=abonetnNt;
-                cyhherCreate=false;
+        /*if(!First&&!Second&&abonetnN<=2) {
+            System.out.println("2");
+            if (str.equals("service:you first")) {
+                System.out.println("2.1");
+                First = true;
+                Second = false;
+            }
+            if (str.equals("service:you second")) {
+                System.out.println("2.2");
+                First = false;
+                Second = true;
+                String genmod = cypher.genGenMod();
+                Connection.sendString("service:public_key:" + genmod);
+            }
+        }*/
+
+
+
+        if(str.equals("NEW KEY PLEASE")){
+            outMessage.setDisable(true);
+            if(Cypher.needGenNewKey&&abonetnN>2) {
+
+                System.out.println("NEW KEWEQWEWQEWQ");
+                Cypher.needGenNewKey=false;
+                cypher = new Cypher();
+
+                if (myNumber == 1&&abonetnN>2) {
+                    System.out.println("gen new key");
+                    cypher.genGenMod();
+                    Connection.sendString("serviceMUGenMod:>" + cypher.gen + "<" + cypher.modul);
+
+
+                    Connection.sendString("serviceMUP:>" + myNumber + "!" + (myNumber+1) + "<" + myNumber + "^" + cypher
+                            .genPublicKey());
+
+
+                }
+
+
+            }
+           /* if(Cypher.needGenNewKey&&abonetnN<=2){
+                //Cypher.needGenNewKey=false;
+                cypher = new Cypher();
+                System.out.println("222");
+
+                if(Second) {
+                    String genmod = cypher.genGenMod();
+                    System.out.println("222.1");
+                    Connection.sendString("service:public_key:" + genmod);
+                }
+
+                Cypher.needGenNewKey=false;
+            }*/
+
+        }
+    }
+
+    public void keyWork(String str){
+        //System.out.println("!! "+str);
+        if (str.contains("serviceMU:")){
+            System.out.println("1");
+            //System.out.println("connect? = " + connect);
+            myNumber = Integer.parseInt(str.substring(str.indexOf(":") + 1, str.indexOf(":") + 2));
+            int abonetnNt = Integer.parseInt(str.substring(str.indexOf(">") + 1, str.indexOf(">") + 2));
+            //System.out.println("number = " + myNumber);
+            //System.out.println("abonetnN = " + abonetnNt);
+            if (abonetnNt > abonetnN) {
+                abonetnN = abonetnNt;
+                cyhherCreate = false;
                 System.out.println("------------------------------------");
             }
+        }
+        if (str.contains("serviceMU:") && connect&&!cyhherCreate) {
 
-           if(!cyhherCreate) {
-               cypher = new Cypher();
-               cyhherCreate=true;
+            //System.out.println(abonetnNt+" "+abonetnN);
+            if (!cyhherCreate) {
+                cypher = new Cypher();
+                cyhherCreate = true;
 
-               if(myNumber==1){
-                   System.out.println("gen gen gen gen gen");
-                   cypher.genGenMod();
-                   Connection.sendString("serviceMUGenMod:>" + cypher.gen + "<" + cypher.modul);
-                   try {
-                       Thread.sleep(100);
-                   } catch (InterruptedException e) {
-                       e.printStackTrace();
-                   }
-                   int sendTo;
-                   if(myNumber==abonetnN){
-                       sendTo=1;
-                   }else{
-                        sendTo=myNumber+1;
-                   }
-                   int chain=0;
-                   chain+=myNumber;
-                   Connection.sendString("serviceMUP:>"+myNumber+"!"+sendTo+"<"+chain+"^"+cypher.genPublicKey());
-               }
-           }
-
+                if (myNumber == 1) {
+                    //System.out.println("gen gen gen gen gen");
+                    cypher.genGenMod();
+                    Connection.sendString("serviceMUGenMod:>" + cypher.gen + "<" + cypher.modul);
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    int sendTo;
+                    if (myNumber == abonetnN) {
+                        sendTo = 1;
+                    } else {
+                        sendTo = myNumber + 1;
+                    }
+                    int chain = 0;
+                    chain += myNumber;
+                    Connection.sendString("serviceMUP:>" + myNumber + "!" + sendTo + "<" + chain + "^" + cypher.genPublicKey());
+                }
+            }
 
 
         }
-        if(str.contains("serviceMUGenMod:")&&connect){
+        if (str.contains("serviceMUGenMod:") && connect) {
             System.out.println("gen and mod aaaa");
-            if(!cypher.GenModIsGenerate) {
-                cypher.gen= new BigInteger(str.substring(str.indexOf(">") + 1, str.indexOf("<")));
-                cypher.modul=new BigInteger(str.substring(str.indexOf("<") + 1, str.length()));
+            if (!cypher.GenModIsGenerate) {
+                cypher.gen = new BigInteger(str.substring(str.indexOf(">") + 1, str.indexOf("<")));
+                cypher.modul = new BigInteger(str.substring(str.indexOf("<") + 1, str.length()));
                 cypher.GenModIsGenerate = true;
 
 
                 int sendTo;
-                if(myNumber==abonetnN){
-                    sendTo=1;
-                }else{
-                    sendTo=myNumber+1;
+                if (myNumber == abonetnN) {
+                    sendTo = 1;
+                } else {
+                    sendTo = myNumber + 1;
                 }
-                int chain=0;
-                chain+=myNumber;
-                System.out.println(">"+chain);
-                System.out.println(">"+sendTo);
-                Connection.sendString("serviceMUP:>"+myNumber+"!"+sendTo+"<"+chain+"^"+cypher.genPublicKey());
+                int chain = 0;
+                chain += myNumber;
+                //System.out.println(">" + chain);
+                //System.out.println(">" + sendTo);
+                Connection.sendString("serviceMUP:>" + myNumber + "!" + sendTo + "<" + chain + "^" + cypher.genPublicKey());
 
             }
         }
-        if(str.contains("serviceMUP:>")){
-            System.out.println(str);
-            int chainT=0;
-            for(int i=1;i<=abonetnN;i++)
-                chainT+=i;
-            System.out.println(chainT);
+        if (str.contains("serviceMUP:>")) {
+            //System.out.println(str);
+            int chainT = 0;
+            for (int i = 1; i <= abonetnN; i++)
+                chainT += i;
+            //System.out.println(chainT);
 
-            if(str.substring(str.indexOf("!")+1,str.indexOf("<")).equals(""+myNumber)){
-                System.out.println("ME");
-                int messageChain= Integer.parseInt(str.substring(str.indexOf("<")+1,str.indexOf("^")));
-                if(messageChain==(chainT-myNumber)){
+            if (str.substring(str.indexOf("!") + 1, str.indexOf("<")).equals("" + myNumber)) {
+                //System.out.println("ME");
+                int messageChain = Integer.parseInt(str.substring(str.indexOf("<") + 1, str.indexOf("^")));
+                if (messageChain == (chainT - myNumber)) {
                     System.out.println("key key");
-                    cypher.setOtherKey(str.substring(str.indexOf("^")+1,str.length()));
-                }else{
+                    cypher.setOtherKey(str.substring(str.indexOf("^") + 1, str.length()));
+                    outMessage.setDisable(false);
+                    Timer timer = new Timer();
+                    new Thread(timer).start();
+                } else {
 
                     int sendTo;
-                    if(myNumber==abonetnN){
-                        sendTo=1;
-                    }else{
-                        sendTo=myNumber+1;
+                    if (myNumber == abonetnN) {
+                        sendTo = 1;
+                    } else {
+                        sendTo = myNumber + 1;
                     }
 
-                    messageChain+=myNumber;
-                    Connection.sendString("serviceMUP:>"+myNumber+"!"+sendTo+"<"+messageChain+"^"+cypher.getPassPart
-                            (str.substring(str.indexOf("^")+1,str.length())));
+                    messageChain += myNumber;
+                    Connection.sendString("serviceMUP:>" + myNumber + "!" + sendTo + "<" + messageChain + "^" + cypher.getPassPart
+                            (str.substring(str.indexOf("^") + 1, str.length())));
                 }
+            }
+
+        }
+    }
+
+    public void keyWorkTwoAbonent(String str){
+        if(str.contains("service:public_key:")&&abonetnN<=2){
+            System.out.println(str);
+            System.out.println("3");
+            if(!cypher.GenModIsGenerate&&!cypher.setOtherKeyB){
+                System.out.println("3.1");
+                cypher.setGenMod(str.replace("service:public_key:",""));
+                date = new Date();
+                Connection.sendString("service:public_key:"+ String.valueOf(cypher.publicKey));
+                if(!Name.equals(""))
+                    Platform.runLater( () -> outMessage.setDisable(false) );
+                isConnect=true;
+                Timer timer = new Timer();
+                new Thread(timer).start();
+
+            }
+            if(cypher.GenModIsGenerate&&!cypher.setOtherKeyB&&!str.contains(String.valueOf(cypher.publicKey))){
+                System.out.println("3.2");
+                cypher.setOtherKey(str.replace("service:public_key:",""));
+
+                if(!Name.equals(""))
+                    Platform.runLater( () -> outMessage.setDisable(false) );
+                isConnect=true;
+                outMessage.setDisable(false);
+                Timer timer = new Timer();
+                new Thread(timer).start();
+
+
             }
         }
     }

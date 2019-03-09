@@ -14,13 +14,13 @@ public class Timer extends Task {
     private int timer(){
         TimerTask task2 = new TimerTask() {
             public void run() {
-                System.out.println("Knock-Knock!");
+                //System.out.println("Knock-Knock!");
                 Cypher.needGenNewKey=true;
-                Controller.Connection.sendString("service:KEY KEY NEW KEY");
+                Controller.Connection.sendString("NEW KEY PLEASE");
                 cancel(); }};
 
         java.util.Timer timer = new java.util.Timer();
-        timer.schedule(task2, 60000);
+        timer.schedule(task2, 10000);
         return 0;
     }
 }

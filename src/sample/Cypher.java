@@ -18,7 +18,7 @@ public class Cypher {
     private BigInteger password;
     private String passwordString;
     private BigInteger passPart;
-    private int keysSize=1024;//1024 бит
+    private int keysSize=1300;//1024 бит
     //private String salt = KeyGenerators.string().generateKey();
     private String salt="324fee14e5b58635";
     private TextEncryptor encryptor;
@@ -91,7 +91,7 @@ public class Cypher {
         String codeText= new String(new BigInteger(passStr, 2).toByteArray());
         codeText=codeText.replaceAll("\\s+","");
         codeText=codeText.replaceAll("[^a-zA-Z0-9!@#$%^&*()_+;:?]","");
-        if(codeText.length()>32) codeText=codeText.substring(0,32);
+        //if(codeText.length()>32) codeText=codeText.substring(0,32);
         passwordString=codeText;
         System.out.println("Final password = "+passwordString+": "+passwordString.length());
         encryptor= Encryptors.text(String.valueOf(passwordString), salt);
@@ -130,4 +130,6 @@ public class Cypher {
         publicKey=other.modPow(privateKey,modul);
         return String.valueOf(publicKey);
     }
+
+
 }
