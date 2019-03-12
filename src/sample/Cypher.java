@@ -66,6 +66,7 @@ public class Cypher {
     }
 
     public void setOtherKey(String str){
+
         //System.out.println("класс Приняли публичный ключ ключ другого клиента");
         //System.out.println(">>>"+str);
         otherKey= new BigInteger(str);
@@ -93,7 +94,7 @@ public class Cypher {
         codeText=codeText.replaceAll("[^a-zA-Z0-9!@#$%^&*()_+;:?]","");
         //if(codeText.length()>32) codeText=codeText.substring(0,32);
         passwordString=codeText;
-        //System.out.println("Final password = "+passwordString+": "+passwordString.length());
+        System.out.println("Final password = "+passwordString+": "+passwordString.length());
         encryptor= Encryptors.text(String.valueOf(passwordString), salt);
 
     }
@@ -127,8 +128,9 @@ public class Cypher {
 
     public String getPassPart(String str){
         BigInteger other = new BigInteger(str);
-        publicKey=other.modPow(privateKey,modul);
+        publicKey = other.modPow(privateKey, modul);
         return String.valueOf(publicKey);
+
     }
 
 

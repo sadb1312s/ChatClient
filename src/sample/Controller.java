@@ -593,7 +593,17 @@ public class Controller implements TCPConnectionListener{
         //System.out.println("! "+str);
 
         if(str.contains("client disconnected TCP Connection:")){
+            System.out.println("abonent "+abonetnN);
             abonetnN--;
+            //Controller.Connection.sendString("NEW KEY PLEASE");
+            if(abonetnN==1) {
+
+                First=false;
+                Second=false;
+            }
+
+            System.out.println("abonent "+abonetnN);
+
         }
 
         if (!str.contains("TCP")&&!str.contains("серверу")&&!str.equals("null")&&!str.contains("service:")&&!str
@@ -614,6 +624,7 @@ public class Controller implements TCPConnectionListener{
 
         if(str.contains("serviceMU")) {
             keyWork(str);
+
         }
 
         if(str.contains("service:public_key:")){
@@ -621,16 +632,22 @@ public class Controller implements TCPConnectionListener{
         }
 
         if(!First&&!Second&&abonetnN<=2) {
-            System.out.println("2");
+            //System.out.println("2");
             if (str.equals("service:you first")) {
                 //System.out.println("2.1");
+                cypher=new Cypher();
                 First = true;
+                myNumber=1;
+                abonetnN=2;
                 Second = false;
             }
             if (str.equals("service:you second")) {
                 //System.out.println("2.2");
+                cypher=new Cypher();
                 First = false;
                 Second = true;
+                abonetnN=2;
+                myNumber=2;
                 String genmod = cypher.genGenMod();
                 Connection.sendString("service:public_key:" + genmod);
             }
@@ -640,8 +657,10 @@ public class Controller implements TCPConnectionListener{
 
         if(str.equals("NEW KEY PLEASE")&&abonetnN<=2){
             outMessage.setDisable(true);
+            System.out.println("new key please");
 
-
+            cypher.needGenNewKey=true;
+            System.out.println("> "+cypher.needGenNewKey+" "+abonetnN);
            if(Cypher.needGenNewKey&&abonetnN<=2){
                 //Cypher.needGenNewKey=false;
                 cypher = new Cypher();
@@ -661,14 +680,10 @@ public class Controller implements TCPConnectionListener{
         if(str.equals("NEW KEY PLEASE")&&abonetnN>2) {
             //if (Cypher.needGenNewKey && abonetnN > 2) {
                 System.out.println("NEW KEWEQWEWQEWQ");
-                if(timer!=null){
-                    timer.stop=true;
-                    timer.cancel();
-                    System.out.println("timer stop "+timer.stop);
-                }
                 //Cypher.needGenNewKey = false;
                 cyhherCreate = false;
                 keyWork(str);
+
             //}
         }
     }
@@ -686,11 +701,6 @@ public class Controller implements TCPConnectionListener{
                 cyhherCreate = false;
                 //System.out.println("Начинаем по новой");
 
-                if(timer!=null){
-                    timer.stop=true;
-                    timer.cancel();
-                    //System.out.println("timer stop "+timer.stop);
-                }
             }
            // System.out.println("number = " + myNumber);
            // System.out.println("abonetnN = " + abonetnNt);
@@ -757,8 +767,10 @@ public class Controller implements TCPConnectionListener{
                         //System.out.println("конец чепочки");
                         cypher.setOtherKey(str.substring(str.indexOf("^") + 1, str.length()));
                         outMessage.setDisable(false);
-                        timer = new Timer();
-                        new Thread(timer).start();
+                        if(myNumber==1) {
+                            timer = new Timer();
+                            new Thread(timer).start();
+                        }
                     } else {
 
                         int sendTo;
@@ -782,29 +794,40 @@ public class Controller implements TCPConnectionListener{
     public void keyWorkTwoAbonent(String str){
         if(str.contains("service:public_key:")&&abonetnN<=2){
             //System.out.println(str);
-            //System.out.println("3");
+
             if(!cypher.GenModIsGenerate&&!cypher.setOtherKeyB){
+                System.out.println("3");
+                System.out.println(str);
+
                 //System.out.println("3.1");
                 cypher.setGenMod(str.replace("service:public_key:",""));
                 date = new Date();
                 Connection.sendString("service:public_key:"+ String.valueOf(cypher.publicKey));
                 if(!Name.equals(""))
                     Platform.runLater( () -> outMessage.setDisable(false) );
-                isConnect=true;
-                timer = new Timer();
+
+                if(myNumber==1) {
+                    isConnect = true;
+                    timer = new Timer();
+                }
+
                 new Thread(timer).start();
 
             }
             if(cypher.GenModIsGenerate&&!cypher.setOtherKeyB&&!str.contains(String.valueOf(cypher.publicKey))){
-                //System.out.println("3.2");
+                System.out.println("4");
+                System.out.println(str);
                 cypher.setOtherKey(str.replace("service:public_key:",""));
 
                 if(!Name.equals(""))
                     Platform.runLater( () -> outMessage.setDisable(false) );
                 isConnect=true;
                 outMessage.setDisable(false);
-                Timer timer = new Timer();
-                new Thread(timer).start();
+                /*if(myNumber==2) {
+                    Timer timer = new Timer();
+                    new Thread(timer).start();
+                }*/
+                //abonetnN=2;
 
 
             }

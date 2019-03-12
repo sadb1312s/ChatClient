@@ -22,24 +22,13 @@ public class Timer extends Task {
             public void run() {
                 Thread t = Thread.currentThread();
 
-                if(!stop) {
-                    System.out.println(t.getName() + " Knock-Knock!");
-                    Cypher.needGenNewKey = true;
-                    if(myNumber==1)
-                        Controller.Connection.sendString("NEW KEY PLEASE");
-                    cancel();
 
-
-                }
-                if(stop){
-                    System.out.println("TIMER STOP");
-                    timer.cancel();
-                    timer.purge();
-                }
-
+                System.out.println(t.getName() + " Knock-Knock!");
+                Cypher.needGenNewKey = true;
+                if(myNumber==1)
+                    Controller.Connection.sendString("NEW KEY PLEASE");
+                cancel();
             }};
-
-
 
         timer.schedule(task2, 10000);
 
