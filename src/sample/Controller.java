@@ -22,8 +22,8 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
@@ -46,27 +46,13 @@ public class Controller implements TCPConnectionListener{
 
     //графика
     @FXML
-    private AnchorPane TopPane;
-    @FXML
-    private Circle Status;
-    @FXML
     private TextField nickName;
     @FXML
     private StackPane getNamePane;
     @FXML
     private TextField outMessage;
     @FXML
-    private Button TryConnect;
-    @FXML
-    private StackPane ConnectField;
-    @FXML
-    private TextFlow Test;
-    @FXML
     private ScrollPane ScrollBar;
-    @FXML
-    private ScrollPane Test2;
-    @FXML
-    private Pane testPane;
     @FXML
     private TextField Adress;
     @FXML
@@ -77,6 +63,12 @@ public class Controller implements TCPConnectionListener{
     private AnchorPane MainPain;
     @FXML
     private AnchorPane DropPane;
+    @FXML
+    private Button SettingButton;
+    @FXML
+    private AnchorPane SettingPane;
+    @FXML
+    private Circle ConnectCircle;
 
     //
     int nMsg=0;
@@ -95,6 +87,7 @@ public class Controller implements TCPConnectionListener{
     static int myNumber;
     boolean cyhherCreate=false;
     Timer timer;
+    boolean SettingVisible=false;
 
 
     //для шифрования
@@ -190,8 +183,27 @@ public class Controller implements TCPConnectionListener{
                 }
         );
 
-        ScrollBar.setFitToWidth(true);
 
+        ScrollBar.setFitToWidth(true);
+        SettingButton.setStyle("-fx-background-color: #8AA4C1");
+        SettingButton.setOnAction(event -> {
+            boolean f=false;
+
+            if(SettingVisible&&!f) {
+                SettingPane.setVisible(false);
+                SettingVisible=false;
+                f=true;
+            }
+
+            if(!SettingVisible&&!f) {
+                SettingPane.setVisible(true);
+                SettingVisible=true;
+                f=true;
+            }
+
+        });
+        Port.setOnAction(event -> port=Integer.parseInt(Port.getText()));
+        Adress.setOnAction(event -> ip=Adress.getText());
     }
 
     private void run(){
@@ -204,7 +216,7 @@ public class Controller implements TCPConnectionListener{
 
             if(connect){
                 date = new Date();
-                //Status.setFill(Color.GREEN);
+
                 //если тестовоя проверка прошла
                 try {
                     Connection = new TCPConnection(this,ip,port);
@@ -219,15 +231,17 @@ public class Controller implements TCPConnectionListener{
         check.setOnFailed(event -> {
             //System.out.println("Connect="+connect);
             date = new Date();
-            Status.setFill(Color.RED);
+
         });*/
         try {
             Connection = new TCPConnection(this,ip,port);
             connect=true;
             isConnect=true;
             nickName.setDisable(false);
+            ConnectCircle.setFill(Color.GREEN);
             //outMessage.setDisable(false);
         } catch (IOException e) {
+            ConnectCircle.setFill(Color.RED);
             e.printStackTrace();
         }
     }
@@ -656,6 +670,8 @@ public class Controller implements TCPConnectionListener{
 
 
         if(str.equals("NEW KEY PLEASE")&&abonetnN<=2){
+            if(timer!=null)
+                timer.stop=true;
             outMessage.setDisable(true);
             System.out.println("new key please");
 
@@ -678,6 +694,8 @@ public class Controller implements TCPConnectionListener{
         }
 
         if(str.equals("NEW KEY PLEASE")&&abonetnN>2) {
+            if(timer!=null)
+                timer.stop=true;
             //if (Cypher.needGenNewKey && abonetnN > 2) {
                 System.out.println("NEW KEWEQWEWQEWQ");
                 //Cypher.needGenNewKey = false;

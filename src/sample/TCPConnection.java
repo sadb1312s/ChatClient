@@ -43,6 +43,7 @@ public class TCPConnection {
                 }
             }
         });
+        rxThread.setDaemon(true);
         rxThread.start();
     }
 
