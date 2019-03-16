@@ -16,9 +16,9 @@
    <children>
       <AnchorPane fx:id="MainPain" maxHeight="-Infinity" maxWidth="750.0" minHeight="-Infinity" minWidth="400.0" prefHeight="600.0" prefWidth="750.0" style="-fx-background-color: #030C2B;">
          <children>
-            <StackPane fx:id="getNamePane" layoutX="-7.0" prefHeight="70.0" prefWidth="758.0" style="-fx-background-color: blue;">
+            <StackPane fx:id="getNamePane" prefHeight="70.0" prefWidth="750.0" style="-fx-background-color: blue;">
                <children>
-                  <AnchorPane fx:id="nickNamePAne" prefHeight="70.0" prefWidth="106.0" style="-fx-background-color: #52657A;">
+                  <AnchorPane fx:id="nickNamePAne" prefHeight="70.0" prefWidth="691.0" style="-fx-background-color: #52657A;">
                      <children>
                         <Button fx:id="SettingButton" layoutX="14.0" layoutY="9.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="54.0" text="Setting" />
                         <Text fill="WHITE" layoutX="235.0" layoutY="43.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Enter your name" wrappingWidth="143.13671875">
@@ -26,12 +26,12 @@
                               <Font size="18.0" />
                            </font>
                         </Text>
-                        <TextField fx:id="nickName" disable="true" layoutX="379.0" layoutY="17.0" onAction="#GetName" prefHeight="39.0" prefWidth="227.0" promptText="Введите имя и нажмите enter">
+                        <TextField fx:id="nickName" disable="true" layoutX="379.0" layoutY="17.0"  prefHeight="39.0" prefWidth="227.0" promptText="Введите имя и нажмите enter">
                            <font>
                               <Font size="15.0" />
                            </font>
                         </TextField>
-                        <Button fx:id="SettingButton1" layoutX="83.0" layoutY="9.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="62.0" text="Connect" />
+                        <Button fx:id="ConnectButton" layoutX="83.0" layoutY="9.0" mnemonicParsing="false" prefHeight="50.0" prefWidth="62.0" text="Connect" />
                         <Circle fx:id="ConnectCircle" fill="#567897" layoutX="183.0" layoutY="36.0" radius="25.0" stroke="BLACK" strokeType="INSIDE" />
                      </children>
                   </AnchorPane>
@@ -60,7 +60,7 @@
                   </Text>
                </children>
             </AnchorPane>
-            <AnchorPane fx:id="SettingPane" layoutX="175.0" layoutY="200.0" prefHeight="200.0" prefWidth="400.0" style="-fx-background-color: white; visibility: no;">
+            <AnchorPane fx:id="SettingPane" layoutX="175.0" layoutY="200.0" prefHeight="254.0" prefWidth="400.0" style="-fx-background-color: white; visibility: false;">
                <children>
                   <Text layoutX="128.0" layoutY="27.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Setting" textAlignment="CENTER" wrappingWidth="143.1367200985551">
                      <font>
@@ -77,8 +77,19 @@
                         <Font size="26.0" />
                      </font>
                   </Text>
-                  <TextField fx:id="Port" layoutX="125.0" layoutY="65.0" />
-                  <TextField fx:id="Adress" layoutX="126.0" layoutY="107.0" />
+                  <TextField fx:id="Port" layoutX="197.0" layoutY="63.0" />
+                  <TextField fx:id="Adress" layoutX="197.0" layoutY="105.0" />
+                  <Text layoutX="28.0" layoutY="170.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Auto connect ">
+                     <font>
+                        <Font size="23.0" />
+                     </font>
+                  </Text>
+                  <TextField fx:id="AutoConnect" layoutX="197.0" layoutY="148.0" />
+                  <Button fx:id="SaveSetting" layoutX="117.0" layoutY="196.0" mnemonicParsing="false" prefHeight="44.0" prefWidth="160.0" text="Save">
+                     <font>
+                        <Font size="20.0" />
+                     </font>
+                  </Button>
                </children>
             </AnchorPane>
          </children>

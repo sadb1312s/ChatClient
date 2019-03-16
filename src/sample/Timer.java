@@ -29,11 +29,11 @@ public class Timer extends Task {
                         Controller.Connection.sendString("NEW KEY PLEASE");
                     cancel();
                 }else{
-                    System.out.println("STOP");
+                    //System.out.println("STOP");
                 }
             }};
 
-        timer.schedule(task2, 10000);
+        timer.schedule(task2, 60000);
 
 
         return 0;

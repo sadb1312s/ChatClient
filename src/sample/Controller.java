@@ -69,13 +69,23 @@ public class Controller implements TCPConnectionListener{
     private AnchorPane SettingPane;
     @FXML
     private Circle ConnectCircle;
+    @FXML
+    private TextField AutoConnect;
+    @FXML
+    private Button SaveSetting;
+    @FXML
+    private Button ConnectButton;
 
     //
     int nMsg=0;
     double x=0;
     //сетевые переменные
-    private static String ip ="gavnotest1488.ddns.net";
-    private static int port=8199;
+    //private static String ip ="gavnotest1488.ddns.net";
+    private static String ip ="";
+    //private static int port=8199;
+    private static int port=0;
+    boolean autoConnect=false;
+
     public static TCPConnection Connection;
     private String Name="";
     public static boolean connect=false;
@@ -88,6 +98,9 @@ public class Controller implements TCPConnectionListener{
     boolean cyhherCreate=false;
     Timer timer;
     boolean SettingVisible=false;
+    boolean newStart=false;
+    String prevMsg="";
+
 
 
     //для шифрования
@@ -97,9 +110,17 @@ public class Controller implements TCPConnectionListener{
     private boolean Second=false;//подключился вторым
 
     public void initialize() {
+        settingRead();
+        Adress.setText(ip);
+        Port.setText(String.valueOf(port));
+        AutoConnect.setText(String.valueOf(autoConnect));
+
         allMessage.setVgap(1); //vertical gap in pixels
+
+
         outMessage.setStyle("-fx-background-color:#4C5866;-fx-text-fill: WHITE;-fx-font-size: 15;-fx-font-family: Arial");
-        run();
+        outMessage.setDisable(true);
+
         ScrollBar.getStylesheets().add("sample/style/scroolpane.css");
 
         //drag and drop
@@ -155,6 +176,8 @@ public class Controller implements TCPConnectionListener{
 
 
                             String imageString = Base64.getEncoder().encodeToString(res);
+                            if(Name.equals(""))
+                                Name=uuid.toString()+"<";
                             String msg = Name + "\n" + " " + "</ImageBytes>" + imageString;
                             sendImage(msg);
                             return null;
@@ -204,15 +227,46 @@ public class Controller implements TCPConnectionListener{
         });
         Port.setOnAction(event -> port=Integer.parseInt(Port.getText()));
         Adress.setOnAction(event -> ip=Adress.getText());
+        SaveSetting.setOnAction(event -> {
+            writeSetting();
+        });
+        ConnectButton.setOnAction(event -> {
+            if(!connect)
+                connect();
+            //System.out.println("connect? "+connect);
+        });
+
+        if(autoConnect)
+            connect();
+
+        nickName.setOnAction(event -> {
+            Name=uuid.toString()+"<"+nickName.getText();
+            getNamePane.requestFocus();
+        });
     }
 
-    private void run(){
-        date = new Date();
+    private void connect(){
 
-        //тестовоя проверка
-        /*Check check = new Check(ip,port);
-        new Thread(check).start();
-        check.setOnSucceeded(event -> {
+        int portT= Integer.parseInt(Port.getText());
+        String ipT = Adress.getText();
+
+        if(!ipT.equals(ip))
+            ip=ipT;
+        if(portT!=port)
+            port=portT;
+
+
+
+        date = new Date();
+        ConnectCircle.setFill(Color.BLUE);
+
+        //Check check = new Check(ip,port);
+        //Thread th =  new Thread(check);
+        //th.setDaemon(true);
+
+        //th.start();
+
+        /*check.setOnSucceeded(event -> {
 
             if(connect){
                 date = new Date();
@@ -220,6 +274,7 @@ public class Controller implements TCPConnectionListener{
                 //если тестовоя проверка прошла
                 try {
                     Connection = new TCPConnection(this,ip,port);
+                    ConnectCircle.setFill(Color.GREEN);
                 } catch (IOException e) {
                     //System.out.println(">не удалось подключиться"+e);
 
@@ -229,10 +284,12 @@ public class Controller implements TCPConnectionListener{
             }
         });
         check.setOnFailed(event -> {
+            ConnectCircle.setFill(Color.RED);
             //System.out.println("Connect="+connect);
             date = new Date();
 
         });*/
+
         try {
             Connection = new TCPConnection(this,ip,port);
             connect=true;
@@ -244,16 +301,9 @@ public class Controller implements TCPConnectionListener{
             ConnectCircle.setFill(Color.RED);
             e.printStackTrace();
         }
+
     }
     //ввод имени и снятие фокуса
-    @FXML
-    public void GetName(javafx.event.ActionEvent actionEvent) {
-        Name=uuid.toString()+"<"+nickName.getText();
-        if(!Name.equals("")&&isConnect){
-            getNamePane.requestFocus();
-            outMessage.setDisable(false);
-        }
-    }
     //отправка сообщения
     @FXML
     public void sendMessage(javafx.event.ActionEvent actionEvent){
@@ -266,6 +316,8 @@ public class Controller implements TCPConnectionListener{
             outMessage.positionCaret( 0 );
             return;
         }
+        if(Name.equals(""))
+            Name=uuid.toString()+"<";
         String msg=Name+":"+" "+msg2;
         //spring security
         //шифрование
@@ -604,19 +656,24 @@ public class Controller implements TCPConnectionListener{
     public void onRecieveReady(TCPConnection tcpConnection, String str) {
 
         str=str.trim();
+
+
+
         //System.out.println("! "+str);
 
         if(str.contains("client disconnected TCP Connection:")){
-            System.out.println("abonent "+abonetnN);
-            abonetnN--;
+            System.out.println("!>>"+prevMsg);
             //Controller.Connection.sendString("NEW KEY PLEASE");
-            if(abonetnN==1) {
-
-                First=false;
-                Second=false;
+            //if(abonetnN==2) {
+            //    System.out.println("dasdasdasdasds");
+            ///    First=false;
+            //    Second=false;
+            //}
+            if(prevMsg.equals("service:you first")||prevMsg.equals("service:you second")) {
+                if (abonetnN == 3)
+                    abonetnN--;
             }
 
-            System.out.println("abonent "+abonetnN);
 
         }
 
@@ -645,10 +702,43 @@ public class Controller implements TCPConnectionListener{
             keyWorkTwoAbonent(str);
         }
 
-        if(!First&&!Second&&abonetnN<=2) {
-            //System.out.println("2");
+
+            if (str.equals("service:you first")&&!First) {
+                System.out.println("2.1");
+                cypher=new Cypher();
+                First = true;
+                myNumber=1;
+                abonetnN=2;
+                Second = false;
+
+                if(timer!=null)
+                    timer.stop=true;
+            }
+            if (str.equals("service:you second")&&!Second) {
+                System.out.println("2.2");
+                cypher=new Cypher();
+                First = false;
+                Second = true;
+                abonetnN=2;
+                myNumber=2;
+
+                if(timer!=null)
+                    timer.stop=true;
+
+                String genmod = cypher.genGenMod();
+                System.out.println("посылаю генератор модуль и публичный ключ");
+                Connection.sendString("service:public_key:" + genmod);
+            }
+
+
+
+
+
+
+        /*if(!First&&!Second&&abonetnN<=2) {
+            System.out.println("2");
             if (str.equals("service:you first")) {
-                //System.out.println("2.1");
+                System.out.println("2.1");
                 cypher=new Cypher();
                 First = true;
                 myNumber=1;
@@ -656,7 +746,7 @@ public class Controller implements TCPConnectionListener{
                 Second = false;
             }
             if (str.equals("service:you second")) {
-                //System.out.println("2.2");
+                System.out.println("2.2");
                 cypher=new Cypher();
                 First = false;
                 Second = true;
@@ -665,7 +755,7 @@ public class Controller implements TCPConnectionListener{
                 String genmod = cypher.genGenMod();
                 Connection.sendString("service:public_key:" + genmod);
             }
-        }
+        }*/
 
 
 
@@ -673,18 +763,19 @@ public class Controller implements TCPConnectionListener{
             if(timer!=null)
                 timer.stop=true;
             outMessage.setDisable(true);
-            System.out.println("new key please");
+            //System.out.println("new key please");
 
             cypher.needGenNewKey=true;
-            System.out.println("> "+cypher.needGenNewKey+" "+abonetnN);
+            //System.out.println("> "+cypher.needGenNewKey+" "+abonetnN);
            if(Cypher.needGenNewKey&&abonetnN<=2){
                 //Cypher.needGenNewKey=false;
                 cypher = new Cypher();
-                //System.out.println("222");
+                //System.out.println("новые ключи");
 
+               //System.out.println(First+" "+Second);
                 if(Second) {
                     String genmod = cypher.genGenMod();
-                    //System.out.println("222.1");
+                    //System.out.println("посылаю генерантор модуль и публчный ключ");
                     Connection.sendString("service:public_key:" + genmod);
                 }
 
@@ -694,16 +785,19 @@ public class Controller implements TCPConnectionListener{
         }
 
         if(str.equals("NEW KEY PLEASE")&&abonetnN>2) {
+            //System.out.println("Abobnent "+abonetnN);
             if(timer!=null)
                 timer.stop=true;
             //if (Cypher.needGenNewKey && abonetnN > 2) {
-                System.out.println("NEW KEWEQWEWQEWQ");
+                //System.out.println("NEW KEWEQWEWQEWQ");
                 //Cypher.needGenNewKey = false;
                 cyhherCreate = false;
                 keyWork(str);
 
             //}
         }
+
+        prevMsg=str;
     }
 
     public void keyWork(String str){
@@ -717,6 +811,7 @@ public class Controller implements TCPConnectionListener{
             if (abonetnNt != abonetnN) {
                 abonetnN = abonetnNt;
                 cyhherCreate = false;
+
                 //System.out.println("Начинаем по новой");
 
             }
@@ -726,13 +821,13 @@ public class Controller implements TCPConnectionListener{
 
         }
         if(!cyhherCreate&& connect){
-            //System.out.println("новый обьект");
             cypher = new Cypher();
             cyhherCreate = true;
 
 
             if (myNumber == 1) {
-                //System.out.println(myNumber+" gen gen gen gen gen");
+                System.out.println("MY NUMBER = "+myNumber+" "+abonetnN);
+                System.out.println(myNumber+" gen gen gen gen gen");
                 cypher.genGenMod();
                 Connection.sendString("serviceMUGenMod:>" + cypher.gen + "<" + cypher.modul);
 
@@ -784,7 +879,9 @@ public class Controller implements TCPConnectionListener{
                     if (messageChain == (chainT - myNumber)) {
                         //System.out.println("конец чепочки");
                         cypher.setOtherKey(str.substring(str.indexOf("^") + 1, str.length()));
+                        isConnect=true;
                         outMessage.setDisable(false);
+                        printMessage("new KEY");
                         if(myNumber==1) {
                             timer = new Timer();
                             new Thread(timer).start();
@@ -814,16 +911,16 @@ public class Controller implements TCPConnectionListener{
             //System.out.println(str);
 
             if(!cypher.GenModIsGenerate&&!cypher.setOtherKeyB){
-                System.out.println("3");
-                System.out.println(str);
+                System.out.println("приняли генератор модуль и публичныый ключ");
+                //System.out.println(str);
 
                 //System.out.println("3.1");
                 cypher.setGenMod(str.replace("service:public_key:",""));
                 date = new Date();
                 Connection.sendString("service:public_key:"+ String.valueOf(cypher.publicKey));
-                if(!Name.equals(""))
-                    Platform.runLater( () -> outMessage.setDisable(false) );
 
+                outMessage.setDisable(false);
+                printMessage("new KEY");
                 if(myNumber==1) {
                     isConnect = true;
                     timer = new Timer();
@@ -833,19 +930,16 @@ public class Controller implements TCPConnectionListener{
 
             }
             if(cypher.GenModIsGenerate&&!cypher.setOtherKeyB&&!str.contains(String.valueOf(cypher.publicKey))){
-                System.out.println("4");
-                System.out.println(str);
+                //System.out.println("4");
+                //System.out.println(str);
+                System.out.println("приняли публичный ключ");
                 cypher.setOtherKey(str.replace("service:public_key:",""));
 
-                if(!Name.equals(""))
-                    Platform.runLater( () -> outMessage.setDisable(false) );
+
+
                 isConnect=true;
                 outMessage.setDisable(false);
-                /*if(myNumber==2) {
-                    Timer timer = new Timer();
-                    new Thread(timer).start();
-                }*/
-                //abonetnN=2;
+                printMessage("new KEY");
 
 
             }
@@ -871,7 +965,9 @@ public class Controller implements TCPConnectionListener{
     }
 
     public boolean chekName(String str){
+        //System.out.println("name check "+str);
         try {
+
             if (str.substring(0, str.indexOf("<")).contains(uuid.toString())) {
                 return true;
             } else {
@@ -888,6 +984,102 @@ public class Controller implements TCPConnectionListener{
             return str.substring(str.indexOf("<")+1, str.length());
         }catch (Exception e){
             return str;
+        }
+    }
+
+    public void settingRead(){
+
+        String tt = System.getProperty("user.home");
+        tt+="\\AppData\\Local\\Temp\\ChatSetting.txt";
+        System.out.println(tt);
+
+        File setting = new File(tt);
+
+
+        if(setting.exists()){
+            //System.out.println("файл есть");
+
+            try{
+                FileReader fr = new FileReader(setting);
+                BufferedReader br = new BufferedReader(fr);
+
+                String t = br.readLine();
+
+                int n=0;
+                while (t!=null){
+                    if(n==0) {
+                        port = Integer.parseInt(t.substring(t.indexOf("\"")+1, t.length()-1));
+                    }
+                    if(n==1)
+                        ip=t.substring(t.indexOf("\"")+1,t.length()-1);
+                    if(n==2) {
+                        if (t.substring(t.indexOf("\"") + 1, t.length() - 1).equals("true"))
+                            autoConnect = true;
+                    }
+
+                    n++;
+                    t=br.readLine();
+                }
+
+                fr.close();
+                br.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }else {
+
+            //System.out.println("файла нет");
+            try {
+                setting.createNewFile();
+                FileWriter writer = new FileWriter(setting, false);
+
+                String text = "порт = \"8199\""+"\r\n";
+                writer.write(text);
+                text = "адрес = \"gavnotest1488.ddns.net\""+"\r\n";
+                writer.write(text);
+                text = "авто подключение = \"true\""+"\r\n";
+                writer.write(text);
+                writer.flush();
+                writer.close();
+
+                settingRead();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+    }
+
+    public void writeSetting(){
+        String tt = System.getProperty("user.home");
+        tt+="\\AppData\\Local\\Temp\\ChatSetting.txt";
+        File setting = new File(tt);
+        if(setting.exists()){
+            try {
+                FileWriter writer = new FileWriter(setting, false);
+                String text = "порт = \""+Port.getText()+"\""+"\r\n";
+                writer.write(text);
+                text = "адрес = \""+Adress.getText()+"\""+"\r\n";
+                writer.write(text);
+                text = "авто подключение = \""+AutoConnect.getText()+"\""+"\r\n";
+                writer.write(text);
+                writer.flush();
+                writer.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }else {
+            try {
+                setting.createNewFile();
+                writeSetting();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
