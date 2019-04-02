@@ -17,7 +17,8 @@ public class Main extends Application  {
     @Override
     public void start(Stage primaryStage) throws Exception{
 
-
+        System.setProperty("javax.net.ssl.keyStore", "/home/user/.keystore");
+        System.setProperty("javax.net.ssl.keyStorePassword", "changeit");
 
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
         primaryStage.setScene(new Scene(root, 750, 600));

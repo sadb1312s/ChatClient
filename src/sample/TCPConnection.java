@@ -14,11 +14,19 @@ public class TCPConnection {
 
 
     public TCPConnection(TCPConnectionListener eventListener,String IpAddr,int Port) throws IOException{
+
+
+
         this(eventListener,new Socket(IpAddr,Port));
+
 
     }
 
     public TCPConnection(TCPConnectionListener eventListener,Socket socket) throws IOException{
+
+
+
+
 
         this.socket=socket;
         this.eventListener=eventListener;

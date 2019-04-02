@@ -291,14 +291,18 @@ public class Controller implements TCPConnectionListener{
         });*/
 
         try {
+
             Connection = new TCPConnection(this,ip,port);
+
             connect=true;
             isConnect=true;
             nickName.setDisable(false);
             ConnectCircle.setFill(Color.GREEN);
+            System.out.println("connect");
             //outMessage.setDisable(false);
         } catch (IOException e) {
             ConnectCircle.setFill(Color.RED);
+            System.out.println("not connect");
             e.printStackTrace();
         }
 
@@ -311,8 +315,8 @@ public class Controller implements TCPConnectionListener{
         String msg2=outMessage.getText();
         msg2=msg2.trim();
 
-        if(msg2.equals(""))
-        {
+
+        if(msg2.equals("")) {
             outMessage.positionCaret( 0 );
             return;
         }
@@ -881,7 +885,7 @@ public class Controller implements TCPConnectionListener{
                         cypher.setOtherKey(str.substring(str.indexOf("^") + 1, str.length()));
                         isConnect=true;
                         outMessage.setDisable(false);
-                        printMessage("new KEY");
+                        //printMessage("new KEY");
                         if(myNumber==1) {
                             timer = new Timer();
                             new Thread(timer).start();
@@ -949,6 +953,8 @@ public class Controller implements TCPConnectionListener{
     @Override
     public void onDisconect(TCPConnection tcpConnection) {
         printMessage("Не удалось полкючиться к серверу");
+        connect=false;
+        ConnectCircle.setFill(Color.RED);
     }
 
     @Override
